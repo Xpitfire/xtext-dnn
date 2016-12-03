@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.xtext.example.mydsl</groupId>
+  <artifactId>org.xtext.example.mydsl</artifactId>
+  <versioning>
+    <versions>
+      <version>1.0.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20161202012906</lastUpdated>
+  </versioning>
+</metadata>

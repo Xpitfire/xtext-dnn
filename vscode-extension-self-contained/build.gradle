@@ -1,0 +1,30 @@
+task copyApplication(type: Sync) {
+    def installDistTask = project(':org.xtext.example.mydsl.ide').tasks.installDist
+    dependsOn installDistTask
+    from installDistTask.outputs
+    into 'src/mydsl'
+}
+
+clean << {
+	delete copyApplication.outputs
+}
+
+npmInstall.dependsOn copyApplication
+
+task installExtension(type: Exec, dependsOn: vscodeExtension) {
+    commandLine 'code'
+    args '--install-extension', vscodeExtension.destPath
+}
+
+task startCode(type:Exec, dependsOn: installExtension) {
+    commandLine 'code'
+    args "$rootProject.projectDir/demo/", '--new-window'
+}
+
+task publish(dependsOn: vscodeExtension, type: NodeTask) {
+    script = file("$rootProject.projectDir/node_modules/vsce/out/vsce")
+    args = [ 'publish', '-p', System.getenv('ACCESS_TOKEN'), project.version ]
+    execOverrides {
+        workingDir = projectDir
+    }
+}
