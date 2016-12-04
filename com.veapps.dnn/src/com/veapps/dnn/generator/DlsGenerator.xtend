@@ -19,12 +19,42 @@ class DlsGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val fileName = resource.URI.trimFileExtension.lastSegment
 		fsa.generateFile(fileName+"model.caffe", '''
-		«FOR g : resource.allContents.filter(Network).toIterable»
-		name: "«g.name»"
-		«ENDFOR»
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		name: "«net.name»"
 		layer {
-
+			name: "train-data"
+			type: "Data"
+			top: "data"
+			top: "label"
+			transform_param {
+		    	mirror: true
+		    crop_size: «net.cropSize»
+			}
+			data_param {
+				batch_size: «net.batchSize»
+			}
+			include { stage: "train" }
 		}
-        ''')
+		layer {
+			name: "val-data"
+			type: "Data"
+			top: "data"
+			top: "label"
+			transform_param {
+				crop_size: «net.cropSize»
+			}
+			data_param {
+				batch_size: «net.batchSize»
+			}
+			include { stage: "val" }
+		}
+		«FOR layer : net.layers»
+		layer {
+			name: "«layer.convLayerBody»"
+		  	
+		
+		}
+		«ENDFOR»
+		«ENDFOR»''')
 	}
 }

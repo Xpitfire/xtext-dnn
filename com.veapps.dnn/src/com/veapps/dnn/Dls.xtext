@@ -6,42 +6,66 @@ Model:
 	network=Network;
 
 Network:
-	'network' name=ID '{' &
-	'epochs' ASSIGN epochs=INTEGER &
-	('seed' ASSIGN seed=ZINTEGER)? &
-	'updater' REFERENCE updaterType=UpdaterType &
-	'learningRate' ASSIGN learningRate=VariableAssignment
-	layers+=Layer*
+	'network' name=STRING '{' &
+		'epochs' ASSIGN epochs=INTEGER &
+		'crop-size' ASSIGN cropSize=INTEGER &
+		'batch-size' ASSIGN batchSize=INTEGER &
+		('seed' ASSIGN seed=ZINTEGER)? &
+		'updater' REFERENCE updaterType=UpdaterType &
+		'learningRate' ASSIGN learningRate=REAL
+		layers+=Layer*
 	'}'
 ;
 
 Layer:
-	'layer' layerDecl=LayerDeclaration '{'
-	'type' REFERENCE layerType=LayerType
+	'conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
+	| 'pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody layerBody=LayerBody '}'
+	| 'dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
+	| 'softmax' layerDecl=LayerTuple ('{' layerBody=LayerBody '}')?
+;
+
+LayerBody:
 	('activation' REFERENCE activType=ActivationFunctionType)? &
 	('weightsInit' REFERENCE weightInit=WeightInitType)? &
-	('biasInit' ASSIGN biasInit=REAL)?
-	'}'
+	('biasInit' REFERENCE biasInit=WeightInitType)? &
+	(SEPARATOR)*
+;
+
+ConvLayerBody:
+	'kernel-size' ASSIGN kernelSize=INTEGER &
+	'stride' ASSIGN stride=INTEGER &
+	(SEPARATOR)*
+;
+
+PoolLayerBody:
+	'type' REFERENCE poolingType=PoolingType &
+	'stride' ASSIGN stride=INTEGER &
+	(SEPARATOR)*
 ;
 
 LayerDeclaration:
-	layerTuple+=LayerTuple |
-	'[' layerTuple+=LayerTuple (',' layerTuple+=LayerTuple)* ']' |
-	'{' layerMultiplier=INTEGER '}' '[' layerTuple+=LayerTuple ']'
+	layerTuple+=LayerTuple 
+	| '[' layerTuple+=LayerTuple (SEPARATOR layerTuple+=LayerTuple)* ']'
 ;
 
 LayerTuple:
-	'(' ('ref' ':' ref=ID )? ('in' ':' in=LayerRef)? 'out' ':' out=LayerRef ')' |
-	'(' (in=LayerRef)?  ':' out=LayerRef ')' |
-	':' out=LayerRef
+	'(' layerName=LayerName (in=InParam)? out=OutParam ')'
 ;
 
-LayerRef:
-	value=INTEGER | '<' ref=ID '>'
+LayerName:
+	'name' ':' name=STRING
 ;
 
-enum LayerType:
-	CONVOLUTIONAL='conv' | MAXPOOL='max-pool' | AVGPOOL='avg-pool' | DENSE='dense' | SOFTMAX='softmax'
+InParam:
+	'in' ':' name=STRING
+;
+
+OutParam:
+	'out' ':' val=INTEGER
+;
+
+enum PoolingType:
+	MAX_POOLING='max' | AVERAGE_POOLING='avg'
 ;
 
 enum ActivationFunctionType:
@@ -53,31 +77,7 @@ enum UpdaterType:
 ;
 
 enum WeightInitType:
-	ZERO='zero' | UNIFORM='uniform' | NORMALIZED='normalized'
-;
-
-VariableAssignment:
-	value=INTEGER | Expression | Function
-;
-
-Function:
-	name=ID ('(' args+=DeclaredParameter (',' args+=DeclaredParameter)* ')')? ASSIGN expr=Expression
-;
-
-DeclaredParameter:
-	name=ID
-;
-
-Expression:
-	Term (({Plus.left=current} '+' | {Minus.left=current} '-') right=Term)*
-;
-
-Term:
-	Factor (({Multiply.left=current} '*' | {Division.left=current} '/') right=Factor)*
-;
-
-Factor:
-	number= REAL | variable=ID | ('(' expression=Expression ')')
+	ZERO='zero' | UNIFORM='uniform' | NORMALIZED='normalized' | XAVIER='xavier'
 ;
 
 terminal EXT_INT:
@@ -98,6 +98,10 @@ terminal REAL:
 
 terminal ASSIGN:
 	'='
+;
+
+terminal SEPARATOR:
+	','
 ;
 
 terminal REFERENCE:

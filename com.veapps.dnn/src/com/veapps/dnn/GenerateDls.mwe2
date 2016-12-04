@@ -33,7 +33,13 @@ Workflow {
 				generateStub = false
 			}
 			validator = {
-				// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
+				generateStub = true
+			}
+			generator = {
+				generateStub = true
+			}
+			formatter = {
+				generateStub = true
 			}
 		}
 	}

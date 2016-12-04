@@ -25,5 +25,6 @@ Export-Package: com.veapps.dnn.services,
  com.veapps.dnn.dls.util,
  com.veapps.dnn,
  com.veapps.dnn.generator,
- com.veapps.dnn.dls.impl
+ com.veapps.dnn.dls.impl,
+ com.veapps.dnn.formatting2
 Import-Package: org.apache.log4j
