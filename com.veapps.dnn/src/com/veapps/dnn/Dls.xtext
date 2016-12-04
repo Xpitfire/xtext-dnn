@@ -1,0 +1,109 @@
+grammar com.veapps.dnn.Dls with org.eclipse.xtext.common.Terminals
+
+generate dls "http://www.veapps.com/dnn/Dls"
+
+Model:
+	network=Network;
+
+Network:
+	'network' name=ID '{' &
+	'epochs' ASSIGN epochs=INTEGER &
+	('seed' ASSIGN seed=ZINTEGER)? &
+	'updater' REFERENCE updaterType=UpdaterType &
+	'learningRate' ASSIGN learningRate=VariableAssignment
+	layers+=Layer*
+	'}'
+;
+
+Layer:
+	'layer' layerDecl=LayerDeclaration '{'
+	'type' REFERENCE layerType=LayerType
+	('activation' REFERENCE activType=ActivationFunctionType)? &
+	('weightsInit' REFERENCE weightInit=WeightInitType)? &
+	('biasInit' ASSIGN biasInit=REAL)?
+	'}'
+;
+
+LayerDeclaration:
+	layerTuple+=LayerTuple |
+	'[' layerTuple+=LayerTuple (',' layerTuple+=LayerTuple)* ']' |
+	'{' layerMultiplier=INTEGER '}' '[' layerTuple+=LayerTuple ']'
+;
+
+LayerTuple:
+	'(' ('ref' ':' ref=ID )? ('in' ':' in=LayerRef)? 'out' ':' out=LayerRef ')' |
+	'(' (in=LayerRef)?  ':' out=LayerRef ')' |
+	':' out=LayerRef
+;
+
+LayerRef:
+	value=INTEGER | '<' ref=ID '>'
+;
+
+enum LayerType:
+	CONVOLUTIONAL='conv' | MAXPOOL='max-pool' | AVGPOOL='avg-pool' | DENSE='dense' | SOFTMAX='softmax'
+;
+
+enum ActivationFunctionType:
+	SIGMOID='sigmoid' | TANH='tanh' | RELU='relu'
+;
+
+enum UpdaterType:
+	SGD='sgd' | ADAM='adam' | ADADELTA='adadelta' | NESTEROVS='nestrovs' | ADAGRAD='adagrad' | RMSPROP='rmsprop'
+;
+
+enum WeightInitType:
+	ZERO='zero' | UNIFORM='uniform' | NORMALIZED='normalized'
+;
+
+VariableAssignment:
+	value=INTEGER | Expression | Function
+;
+
+Function:
+	name=ID ('(' args+=DeclaredParameter (',' args+=DeclaredParameter)* ')')? ASSIGN expr=Expression
+;
+
+DeclaredParameter:
+	name=ID
+;
+
+Expression:
+	Term (({Plus.left=current} '+' | {Minus.left=current} '-') right=Term)*
+;
+
+Term:
+	Factor (({Multiply.left=current} '*' | {Division.left=current} '/') right=Factor)*
+;
+
+Factor:
+	number= REAL | variable=ID | ('(' expression=Expression ')')
+;
+
+terminal EXT_INT:
+	INT ('e' | 'E')('-' | '+') INTEGER
+;
+
+terminal INTEGER:
+	('1'..'9')(INT)*
+;
+
+terminal ZINTEGER:
+	INT
+;
+
+terminal REAL:
+	INTEGER | INT '.' (EXT_INT | INT) (INT)*
+;
+
+terminal ASSIGN:
+	'='
+;
+
+terminal REFERENCE:
+	'->'
+;
+
+terminal ML_COMMENT:
+	'/*' -> '*/'
+;

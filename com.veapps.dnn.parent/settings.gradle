@@ -1,0 +1,3 @@
+includeFlat 'com.veapps.dnn'
+includeFlat 'com.veapps.dnn.ide'
+includeFlat 'com.veapps.dnn.idea'

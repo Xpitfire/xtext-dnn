@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: com.veapps.dnn.ide
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: com.veapps.dnn.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: com.veapps.dnn,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: com.veapps.dnn.ide.contentassist.antlr,
+ com.veapps.dnn.ide.contentassist.antlr.internal
+

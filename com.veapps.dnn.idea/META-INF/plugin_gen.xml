@@ -1,0 +1,93 @@
+<idea-plugin version="2">
+	<extensions defaultExtensionNs="org.eclipse.xtext.idea">
+		<package
+			uri="http://www.veapps.com/dnn/Dls"
+			class="com.veapps.dnn.dls.DlsPackage"
+		/>
+		<resourceFactory 
+			type="dls"
+			class="org.eclipse.xtext.resource.IResourceFactory"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+		/>
+		<resourceServiceProvider
+			uriExtension="dls"
+			class="org.eclipse.xtext.idea.resource.IResourceIdeaServiceProvider"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+		/>
+
+		<lang.setup
+			language="com.veapps.dnn.Dls"
+			implementationClass="com.veapps.dnn.idea.DlsIdeaSetup"
+		/>
+	</extensions>
+
+	<extensions defaultExtensionNs="com.intellij">
+		<psi.treeChangePreprocessor implementation="com.veapps.dnn.idea.lang.psi.DlsCodeBlockModificationListener"/>
+
+		<fileTypeFactory implementation="com.veapps.dnn.idea.lang.DlsFileTypeFactory"/>
+		<stubElementTypeHolder class="com.veapps.dnn.idea.lang.DlsElementTypeProvider"/>
+		<lang.ast.factory 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.lang.BaseXtextASTFactory"
+		/>
+		<lang.parserDefinition 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.veapps.dnn.idea.lang.parser.DlsParserDefinition"
+		/>
+		<lang.findUsagesProvider 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.findusages.BaseXtextFindUsageProvider"
+		/>
+		<lang.refactoringSupport 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.refactoring.BaseXtextRefactoringSupportProvider"
+		/>
+		<lang.namesValidator 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.intellij.lang.refactoring.NamesValidator"
+		/>
+		<lang.syntaxHighlighterFactory key="com.veapps.dnn.Dls" implementationClass="com.veapps.dnn.idea.highlighting.DlsSyntaxHighlighterFactory" />
+		<lang.braceMatcher 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.intellij.lang.PairedBraceMatcher"
+		/>
+		<annotator 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.annotation.IssueAnnotator"
+		/>
+		<completion.contributor language="com.veapps.dnn.Dls" implementationClass="com.veapps.dnn.idea.completion.DlsCompletionContributor"/>
+		<pom.declarationSearcher implementation="com.veapps.dnn.idea.lang.pom.DlsPomDeclarationSearcher"/>
+
+		<lang.psiStructureViewFactory 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.intellij.lang.PsiStructureViewFactory"
+		/>
+		<facetType implementation="com.veapps.dnn.idea.facet.DlsFacetType"/>
+		<lang.documentationProvider 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.documentation.IdeaDocumentationProvider"
+		/>
+		<colorSettingsPage implementation="com.veapps.dnn.idea.highlighting.DlsColorSettingsPage"/>
+		<highlightVisitor implementation="com.veapps.dnn.idea.highlighting.DlsSemanticHighlightVisitor"/>
+
+		<lang.formatter 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.intellij.formatting.FormattingModelBuilder"
+		/>
+		<lang.commenter 
+			language="com.veapps.dnn.Dls"
+			factoryClass="com.veapps.dnn.idea.DlsExtensionFactory"
+			implementationClass="com.intellij.lang.CodeDocumentationAwareCommenter"
+		/>
+	</extensions>
+</idea-plugin>
