@@ -8,14 +8,11 @@ xtend-gen
 .antlr*.jar
 
 # Eclipse
-.classpath
-.project
 .settings/
 .metadata/
 bin/
 
 # IntelliJ
-*.iml
 *.ipr
 *.iws
 .idea/
