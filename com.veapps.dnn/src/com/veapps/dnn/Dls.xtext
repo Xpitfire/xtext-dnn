@@ -8,8 +8,12 @@ Model:
 Network:
 	'network' name=STRING '{' &
 		'epochs' ASSIGN epochs=INTEGER &
-		'crop-size' ASSIGN cropSize=INTEGER &
+		'image-size' ASSIGN imgSize=INTEGER &
+		'image-channels' ASSIGN imgChannels=INTEGER &
 		'batch-size' ASSIGN batchSize=INTEGER &
+		('train-data-path' ASSIGN trainPath=STRING)? &
+		('val-data-path' ASSIGN valPath=STRING)? &
+		'output-path' ASSIGN outputPath=STRING &
 		('seed' ASSIGN seed=ZINTEGER)? &
 		'updater' REFERENCE updaterType=UpdaterType &
 		'learningRate' ASSIGN learningRate=REAL
@@ -21,12 +25,19 @@ Layer:
 	type='conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
 	| type='pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody layerBody=LayerBody '}'
 	| type='dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
+	| type='branch' name=STRING '{' branchBody=BranchBody branchLayers+=(Layer)* '}'
+;
+
+BranchBody:
+	'in' ':' in=STRING &
+	'out' ':' out=STRING &
+	(SEPARATOR)*
 ;
 
 LayerBody:
-	('activation' REFERENCE activType=ActivationFunctionType)? &
-	('weightsInit' REFERENCE weightInit=WeightInitType)? &
-	('biasInit' REFERENCE biasInit=WeightInitType)? &
+	(layerParams+='activation' REFERENCE activType=ActivationFunctionType)? &
+	(layerParams+='weightsInit' REFERENCE weightInit=WeightInitType)? &
+	(layerParams+='biasInit' REFERENCE biasInit=WeightInitType)? &
 	(SEPARATOR)*
 ;
 

@@ -31,11 +31,168 @@ class DlsGenerator extends AbstractGenerator {
     val String defaultBiasInit = 'constant'
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+		generateSolverFile(resource, fsa)
 		generateProtoTxtFile(resource, fsa)
 		generateExecutionScript(resource, fsa)
+		generateTrainScript(resource, fsa)
 	}
 	
 	// add train script from tutorial: https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
+	
+	def generateTrainScript(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("train.py", '''
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		import os
+		import glob
+		import random
+		import itertools
+		import numpy as np
+		import cv2
+		import lmdb
+		try:
+		    import caffe
+		    from caffe.proto import caffe_pb2
+		except:
+		    raise ImportError('Must be able to import Caffe modules to use this module')
+		
+		#Size of images
+		IMAGE_WIDTH = «net.imgSize»
+		IMAGE_HEIGHT = «net.imgSize»
+		CHANNELS = «net.imgChannels»
+		
+		ROOT_PATH = '«net.outputPath»/'
+		TRAIN_PATH = '«net.trainPath»/'
+		VALIDATION_PATH = '«net.valPath»/'
+		
+		#Create index map for labels
+		labels_index = -1
+		labels_map = {}
+		
+		#Craete data lists
+		train_data_file = {}
+		validation_data_file = {}
+		
+		def transform_img(img, img_width=IMAGE_WIDTH, img_height=IMAGE_HEIGHT):
+		    #Histogram Equalization
+		    img[:, :, 0] = cv2.equalizeHist(img[:, :, 0])
+		    img[:, :, 1] = cv2.equalizeHist(img[:, :, 1])
+		    img[:, :, 2] = cv2.equalizeHist(img[:, :, 2])
+		    #Image Resizing
+		    img = cv2.resize(img, (img_width, img_height), interpolation = cv2.INTER_CUBIC)
+		    return img
+		
+		def make_datum(img, label):
+		    #image is numpy.ndarray format. BGR instead of RGB
+		    return caffe_pb2.Datum(
+		        channels=CHANNELS,
+		        width=IMAGE_WIDTH,
+		        height=IMAGE_HEIGHT,
+		        label=label,
+		        data=np.rollaxis(img, 2).tostring())
+		
+		def add_files(dir, data_list):
+		    for root, subdirs, files in os.walk(dir):
+		        for file in files:
+		            if file.endswith(".png"):
+		                data_list.append(root + '/' + file)
+		
+		def index_label(img_path):
+		    global labels_index
+		    tmp = os.path.dirname(img_path)
+		    path_names = tmp.split('/')
+		    #take last entry (directory name) as key
+		    label = path_names[-1]
+		    index = -1
+		    if labels_map.has_key(label):
+		        index = labels_map[label]
+		    else:
+		        labels_index += 1
+		        labels_map[label] = labels_index
+		        index = labels_index
+		    return index
+		
+		def craete_lmdb(lmbd_file, data, data_mapping):
+		    in_db = lmdb.open(lmbd_file, map_size=int(1e12))
+		    with in_db.begin(write=True) as in_txn:
+		        for in_idx, img_path in enumerate(data):
+		            if in_idx %  6 == 0:
+		                continue
+		            img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+		            img = transform_img(img, img_width=IMAGE_WIDTH, img_height=IMAGE_HEIGHT)
+		            index = index_label(img_path)
+		            data_mapping[img_path] = index
+		            datum = make_datum(img, index) 
+		            in_txn.put('{:0>5d}'.format(in_idx), datum.SerializeToString())
+		    in_db.close()
+		
+		def write_map(map, filename):
+		    if os.path.exists(filename):
+		        os.remove(filename)
+		    with open(filename, "a") as input_file:
+		        for k, v in map.items():
+		            line = '{} {}\n'.format(k, v)
+		            input_file.write(line)
+		
+		def write_list(values, filename):
+		    if os.path.exists(filename):
+		        os.remove(filename)
+		    with open(filename, "a") as input_file:
+		        for v in values:
+		            line = '{}\n'.format(v)
+		            input_file.write(line)
+		
+		train_lmdb = ROOT_PATH + 'train_db'
+		validation_lmdb = ROOT_PATH + 'val_db'
+		
+		os.system('rm -rf  ' + train_lmdb)
+		os.system('rm -rf  ' + validation_lmdb)
+		
+		train_data = []
+		validation_data = []
+		
+		print 'Scan train data directory'
+		add_files(TRAIN_PATH, train_data)
+		print 'Scan validation data directory'
+		add_files(VALIDATION_PATH, validation_data)
+		
+		print 'Shuffle train_data'
+		random.shuffle(train_data)
+		print 'Creating train_lmdb'
+		craete_lmdb(train_lmdb, train_data, train_data_file)
+		print 'Creating validation_lmdb'
+		craete_lmdb(validation_lmdb, validation_data, validation_data_file)
+		print 'Finished processing all images'
+		
+		print 'Write stats files'
+		labels_list = list(labels_map.values())
+		labels_list.sort()
+		write_list(labels_list, ROOT_PATH + 'labels.txt')
+		write_map(train_data_file, ROOT_PATH + 'train.txt')
+		write_map(validation_data_file, ROOT_PATH + 'val.txt')
+		«ENDFOR»
+		''')
+	}
+	
+	def generateSolverFile(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("solver.prototxt", '''
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		net: "«net.name».prototxt"
+		test_iter: 1000
+		test_interval: 1000
+		base_lr: «net.learningRate»
+		lr_policy: "step"
+		gamma: 0.1
+		stepsize: 2500
+		display: 50
+		max_iter: 40000
+		momentum: 0.9
+		weight_decay: 0.0005
+		snapshot: 5000
+		snapshot_prefix: "«net.outputPath»/caffe_model"
+		solver_mode: GPU
+		«ENDFOR»
+		''')
+	}
 	
 	def generateExecutionScript(Resource resource, IFileSystemAccess2 fsa) {
 		fsa.generateFile("predict.py", '''
@@ -79,10 +236,14 @@ class DlsGenerator extends AbstractGenerator {
 			top: "label"
 			transform_param {
 		    	mirror: true
-		    crop_size: «net.cropSize»
+		    	crop_size: «net.imgSize»
 			}
 			data_param {
-				batch_size: «net.batchSize»
+				«IF net.trainPath != null»
+				source: "«net.trainPath»"
+			    «ENDIF»
+			    batch_size: «net.batchSize»
+			    backend: LMDB
 			}
 			include { stage: "train" }
 		}
@@ -92,10 +253,14 @@ class DlsGenerator extends AbstractGenerator {
 			top: "data"
 			top: "label"
 			transform_param {
-				crop_size: «net.cropSize»
+				crop_size: «net.imgSize»
 			}
 			data_param {
-				batch_size: «net.batchSize»
+				«IF net.valPath != null»
+				source: "«net.valPath»"
+			    «ENDIF»
+			    batch_size: «net.batchSize»
+			    backend: LMDB
 			}
 			include { stage: "val" }
 		}
