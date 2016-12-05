@@ -31,8 +31,45 @@ class DlsGenerator extends AbstractGenerator {
     val String defaultBiasInit = 'constant'
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		val fileName = resource.URI.trimFileExtension.lastSegment
-		fsa.generateFile(fileName+"model.caffe", '''
+		generateProtoTxtFile(resource, fsa)
+		generateExecutionScript(resource, fsa)
+	}
+	
+	// add train script from tutorial: https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
+	
+	def generateExecutionScript(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("predict.py", '''
+		import numpy as np
+		import matplotlib.pyplot as plt
+		import sys
+		import caffe
+		
+		# Set the right path to your model definition file, pretrained model weights,
+		# and the image you would like to classify.
+		MODEL_FILE = 'network.prototxt'
+		PRETRAINED = 'network.caffemodel'
+		
+		# load the model
+		caffe.set_mode_gpu()
+		caffe.set_device(0)
+		net = caffe.Classifier(MODEL_FILE, PRETRAINED,
+		                       mean=np.load('data/train_mean.npy').mean(1).mean(1),
+		                       channel_swap=(2,1,0),
+		                       raw_scale=255,
+		                       image_dims=(256, 256))
+		print "successfully loaded classifier"
+		
+		# test on a image
+		IMAGE_FILE = 'path/to/image/img.png'
+		input_image = caffe.io.load_image(IMAGE_FILE)
+		# predict takes any number of images,
+		# and formats them for the Caffe net automatically
+		pred = net.predict([input_image])
+		''')
+	}
+	
+	def void generateProtoTxtFile(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("network.prototxt", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
 		name: "«net.name»"
 		layer {
