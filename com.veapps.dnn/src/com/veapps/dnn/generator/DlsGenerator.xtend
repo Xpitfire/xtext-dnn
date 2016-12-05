@@ -3,11 +3,17 @@
  */
 package com.veapps.dnn.generator
 
+import com.veapps.dnn.dls.ConvLayerBody
+import com.veapps.dnn.dls.Layer
+import com.veapps.dnn.dls.LayerBody
+import com.veapps.dnn.dls.LayerDeclaration
+import com.veapps.dnn.dls.LayerTuple
+import com.veapps.dnn.dls.Network
+import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import com.veapps.dnn.dls.Network
 
 /**
  * Generates code from your model files on save.
@@ -15,6 +21,14 @@ import com.veapps.dnn.dls.Network
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class DlsGenerator extends AbstractGenerator {
+	
+	String weightInit
+	String biasInit
+	LayerTuple prevLayer;
+	LayerTuple curLayer;
+	
+    val String defaultWeightsInit = 'xavier'
+    val String defaultBiasInit = 'constant'
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val fileName = resource.URI.trimFileExtension.lastSegment
@@ -49,12 +63,181 @@ class DlsGenerator extends AbstractGenerator {
 			include { stage: "val" }
 		}
 		«FOR layer : net.layers»
-		layer {
-			name: "«layer.convLayerBody»"
-		  	
-		
-		}
+			«generateLayer(layer)»
 		«ENDFOR»
+		layer {
+			name: "accuracy"
+			type: "Accuracy"
+			bottom: "final-layer"
+			bottom: "label"
+			top: "accuracy"
+			include { stage: "val" }
+		}
+		layer {
+			name: "loss"
+			type: "SoftmaxWithLoss"
+			bottom: "final-layer"
+			bottom: "label"
+			top: "loss"
+			exclude { stage: "deploy" }
+		}
+		layer {
+			name: "softmax"
+			type: "Softmax"
+			bottom: "final-layer"
+			top: "softmax"
+			include { stage: "deploy" }
+		}
 		«ENDFOR»''')
+		
+		weightInit = null
+		biasInit = null
+		prevLayer = null
+		curLayer = null
 	}
+		
+	def String generateLayer(Layer layer) {
+		return '''
+		«IF layer.layerDecl instanceof LayerDeclaration»
+			«generateMultiLayer(layer, (layer.layerDecl as LayerDeclaration).layerTuple)»
+		«ELSE»
+			«generateSimpleLayer(layer, (layer.layerDecl as LayerTuple))»
+		«ENDIF»
+		'''
+	}
+	
+	def String generateMultiLayer(Layer layer, EList<LayerTuple> layerTuples) {
+		return '''
+		«FOR lt : layerTuples»
+			«generateSimpleLayer(layer, lt)»
+		«ENDFOR»
+		'''
+	}
+	
+	def String generateSimpleLayer(Layer layer, LayerTuple layerTuple) {
+		prevLayer = curLayer
+		curLayer = layerTuple
+		
+		var String activation
+		if (layer.layerBody != null && layer.layerBody.activType != null)
+			activation = layer.layerBody.activType.toString
+		else 
+			activation = 'ReLU'
+		
+		var String layerResult
+		
+		val String poolingLayer = '''
+		layer {
+			«IF prevLayer != null»
+			bottom: "«prevLayer.layerName.name»"
+		    «ENDIF»
+		    top: "«curLayer.layerName.name»"
+		    name: "«curLayer.layerName.name»"
+		    type: "Pooling"
+		    pooling_param {
+		        kernel_size: «layerTuple.out.value»
+		        «IF layer.poolLayerBody != null»
+		        stride: «layer.poolLayerBody.stride»
+		        pool: «layer.poolLayerBody.poolingType»
+		        «ENDIF»
+		    }
+		}
+		'''
+		
+		val String neuralLayer = '''
+		layer {
+			name: "«curLayer.layerName.name»"
+			«IF layer.type == 'conv'»
+			type: "Convolution"
+			«ELSEIF layer.type == 'pool'»
+			«ELSEIF layer.type == 'softmax' »
+			type: "Softmax"
+			«ELSE»
+			type: "InnerProduct"
+			«ENDIF»
+			«IF prevLayer == null»
+			bottom: "data"
+			«ELSE»
+			bottom: "«prevLayer.layerName.name»"
+			«ENDIF»
+			top: "«curLayer.layerName.name»"
+			param {
+				lr_mult: 1
+			}
+			param {
+				lr_mult: 2
+			}
+			«IF layer.convLayerBody != null»
+				«generateConvParam(layerTuple, layer.convLayerBody, layer.layerBody)»
+			«ELSEIF layer.poolLayerBody != null»
+			«ELSE»
+				«generateInnerProductParam(layerTuple, layer.layerBody)»
+			«ENDIF»
+		}
+		layer {
+			name: "«activation»_«curLayer.layerName.name»"
+			type: "«activation»"
+			bottom: "«curLayer.layerName.name»"
+			top: "«curLayer.layerName.name»"
+		}
+		'''
+		
+		if (layer.poolLayerBody != null) {
+			layerResult = poolingLayer
+		} else {
+			layerResult = neuralLayer
+		}
+		return layerResult
+	}
+	
+	def void validateInitParams(LayerBody layerBody) {
+		if (layerBody == null) {			
+			weightInit = defaultWeightsInit
+			biasInit = defaultBiasInit
+		} 
+		if (layerBody != null && layerBody.weightInit == null) {
+			weightInit = defaultWeightsInit
+		}
+		if (layerBody != null && layerBody.biasInit == null) {
+			biasInit = defaultBiasInit
+		}
+	}
+	
+	def String generateConvParam(LayerTuple layerTuple, ConvLayerBody convBody, LayerBody layerBody) {
+		validateInitParams(layerBody)
+		
+		return '''
+			convolution_param {
+				num_output: «layerTuple.out.value»
+			    kernel_size: «convBody.kernelSize»
+			    stride: «convBody.stride»
+			    weight_filler {
+			      type: "«weightInit»"
+			    }
+			    bias_filler {
+			      type: "«biasInit»"
+			      value: 0.2
+			    }
+			}
+		'''
+	}
+	
+	def String generateInnerProductParam(LayerTuple layerTuple, LayerBody layerBody) {
+		validateInitParams(layerBody)
+		
+		return '''
+			inner_product_param {
+				«IF layerTuple.out.value != 'classes'»
+				num_output: «layerTuple.out.value»
+			    «ENDIF»
+			    weight_filler {
+			      type: "«weightInit»"
+			    }
+			    bias_filler {
+			      type: "«biasInit»"
+			    }
+			}
+		'''
+	}
+		
 }

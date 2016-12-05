@@ -18,10 +18,10 @@ Network:
 ;
 
 Layer:
-	'conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
-	| 'pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody layerBody=LayerBody '}'
-	| 'dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
-	| 'softmax' layerDecl=LayerTuple ('{' layerBody=LayerBody '}')?
+	type='conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
+	| type='pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody layerBody=LayerBody '}'
+	| type='dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
+	| type='softmax' layerDecl=LayerTuple ('{' layerBody=LayerBody '}')?
 ;
 
 LayerBody:
@@ -53,23 +53,23 @@ LayerTuple:
 ;
 
 LayerName:
-	'name' ':' name=STRING
+	'name' ':' name=(STRING | 'final-layer')
 ;
 
 InParam:
-	'in' ':' name=STRING
+	'in' ':' name=(STRING | 'data')
 ;
 
 OutParam:
-	'out' ':' val=INTEGER
+	'out' ':' value=(INTEGER | 'classes')
 ;
 
 enum PoolingType:
-	MAX_POOLING='max' | AVERAGE_POOLING='avg'
+	MAX_POOLING='MAX' | AVERAGE_POOLING='AVG'
 ;
 
 enum ActivationFunctionType:
-	SIGMOID='sigmoid' | TANH='tanh' | RELU='relu'
+	SIGMOID='Sigmoid' | TANH='TanH' | RELU='ReLU'
 ;
 
 enum UpdaterType:
@@ -77,7 +77,7 @@ enum UpdaterType:
 ;
 
 enum WeightInitType:
-	ZERO='zero' | UNIFORM='uniform' | NORMALIZED='normalized' | XAVIER='xavier'
+	CONSTANT='constant' | GAUSSIAN='gaussian' | XAVIER='xavier'
 ;
 
 terminal EXT_INT:
