@@ -1,0 +1,22 @@
+network "TestNet" {
+	epochs = 10
+	batch-size = 50
+	crop-size = 28
+	updater -> sgd
+	learningRate = 0.03
+	conv (name:"c1" in:data out:16) { 
+		kernel-size = 6, 
+		stride = 2
+	}
+	conv (name:"c2" in:data out:7) { 
+		kernel-size = 3, 
+		stride = 1
+	}
+	pool (name: "p1" out:3) { 
+		type -> MAX, 
+		stride = 1
+	}
+	dense [(name:"d1" in:"p1" out:1024), (name:"d2" in:"d1" out:512), (name:"d3" in:"d2" out:256)]
+	dense (name:final-layer out:classes)
+}
+

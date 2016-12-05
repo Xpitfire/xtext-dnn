@@ -150,8 +150,6 @@ class DlsGenerator extends AbstractGenerator {
 			«IF layer.type == 'conv'»
 			type: "Convolution"
 			«ELSEIF layer.type == 'pool'»
-			«ELSEIF layer.type == 'softmax' »
-			type: "Softmax"
 			«ELSE»
 			type: "InnerProduct"
 			«ENDIF»
