@@ -29,18 +29,47 @@ class DlsGenerator extends AbstractGenerator {
 	
     val String defaultWeightsInit = 'xavier'
     val String defaultBiasInit = 'constant'
+    val String defaultOutputLabels = 'labels'
+    
+    // https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
+	// http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		generateSolverFile(resource, fsa)
 		generateProtoTxtFile(resource, fsa)
 		generateExecutionScript(resource, fsa)
+		generateCreateDbScript(resource, fsa)
+		generatePostImageScript(resource, fsa)
+		generatePrintGraphScript(resource, fsa)
 		generateTrainScript(resource, fsa)
 	}
 	
-	// add train script from tutorial: https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
+	def generatePostImageScript(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("post-db-image.sh", '''
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		«net.caffePath»/build/tools/compute_image_mean -backend=lmdb «net.outputPath»/train_db «net.outputPath»/mean.binaryproto
+		«ENDFOR»
+		''')
+	}
+	
+	def generatePrintGraphScript(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("print-graph.sh", '''
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		python «net.caffePath»/python/draw_net.py «net.outputPath»/network.prototxt «net.outputPath»/caffe_model.png
+		«ENDFOR»
+		''')
+	}
 	
 	def generateTrainScript(Resource resource, IFileSystemAccess2 fsa) {
-		fsa.generateFile("train.py", '''
+		fsa.generateFile("train.sh", '''
+		«FOR net : resource.allContents.filter(Network).toIterable»
+		caffe train --solver «net.outputPath»/solver.prototxt 2>&1 | tee «net.outputPath»/model_train.log
+		«ENDFOR»
+		''')
+	}
+	
+	def generateCreateDbScript(Resource resource, IFileSystemAccess2 fsa) {
+		fsa.generateFile("create-db.py", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
 		import os
 		import glob
@@ -176,7 +205,7 @@ class DlsGenerator extends AbstractGenerator {
 	def generateSolverFile(Resource resource, IFileSystemAccess2 fsa) {
 		fsa.generateFile("solver.prototxt", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
-		net: "«net.name».prototxt"
+		net: "«net.outputPath»/network.prototxt"
 		test_iter: 1000
 		test_interval: 1000
 		base_lr: «net.learningRate»
@@ -237,13 +266,14 @@ class DlsGenerator extends AbstractGenerator {
 			transform_param {
 		    	mirror: true
 		    	crop_size: «net.imgSize»
+		    	#mean_file: «net.outputPath»/mean.binaryproto
 			}
 			data_param {
 				«IF net.trainPath != null»
-				source: "«net.trainPath»"
+				#source: "«net.outputPath»/train_db"
 			    «ENDIF»
 			    batch_size: «net.batchSize»
-			    backend: LMDB
+			    #backend: LMDB
 			}
 			include { stage: "train" }
 		}
@@ -253,19 +283,21 @@ class DlsGenerator extends AbstractGenerator {
 			top: "data"
 			top: "label"
 			transform_param {
+				mirror: false
 				crop_size: «net.imgSize»
+				#mean_file: «net.outputPath»/mean.binaryproto
 			}
 			data_param {
 				«IF net.valPath != null»
-				source: "«net.valPath»"
+				#source: "«net.outputPath»/val_db"
 			    «ENDIF»
 			    batch_size: «net.batchSize»
-			    backend: LMDB
+			    #backend: LMDB
 			}
 			include { stage: "val" }
 		}
 		«FOR layer : net.layers»
-			«generateLayer(layer)»
+			«generateLayer(net, layer)»
 		«ENDFOR»
 		layer {
 			name: "accuracy"
@@ -298,25 +330,25 @@ class DlsGenerator extends AbstractGenerator {
 		curLayer = null
 	}
 		
-	def String generateLayer(Layer layer) {
+	def String generateLayer(Network net, Layer layer) {
 		return '''
 		«IF layer.layerDecl instanceof LayerDeclaration»
-			«generateMultiLayer(layer, (layer.layerDecl as LayerDeclaration).layerTuple)»
+			«generateMultiLayer(net, layer, (layer.layerDecl as LayerDeclaration).layerTuple)»
 		«ELSE»
-			«generateSimpleLayer(layer, (layer.layerDecl as LayerTuple))»
+			«generateSimpleLayer(net, layer, (layer.layerDecl as LayerTuple))»
 		«ENDIF»
 		'''
 	}
 	
-	def String generateMultiLayer(Layer layer, EList<LayerTuple> layerTuples) {
+	def String generateMultiLayer(Network net, Layer layer, EList<LayerTuple> layerTuples) {
 		return '''
 		«FOR lt : layerTuples»
-			«generateSimpleLayer(layer, lt)»
+			«generateSimpleLayer(net, layer, lt)»
 		«ENDFOR»
 		'''
 	}
 	
-	def String generateSimpleLayer(Layer layer, LayerTuple layerTuple) {
+	def String generateSimpleLayer(Network net, Layer layer, LayerTuple layerTuple) {
 		prevLayer = curLayer
 		curLayer = layerTuple
 		
@@ -371,7 +403,7 @@ class DlsGenerator extends AbstractGenerator {
 				«generateConvParam(layerTuple, layer.convLayerBody, layer.layerBody)»
 			«ELSEIF layer.poolLayerBody != null»
 			«ELSE»
-				«generateInnerProductParam(layerTuple, layer.layerBody)»
+				«generateInnerProductParam(net, layerTuple, layer.layerBody)»
 			«ENDIF»
 		}
 		layer {
@@ -422,12 +454,14 @@ class DlsGenerator extends AbstractGenerator {
 		'''
 	}
 	
-	def String generateInnerProductParam(LayerTuple layerTuple, LayerBody layerBody) {
+	def String generateInnerProductParam(Network net, LayerTuple layerTuple, LayerBody layerBody) {
 		validateInitParams(layerBody)
 		
 		return '''
 			inner_product_param {
-				«IF layerTuple.out.value != 'classes'»
+				«IF layerTuple.out.value == defaultOutputLabels»
+				num_output: «net.outputLabels»
+				«ELSE»
 				num_output: «layerTuple.out.value»
 			    «ENDIF»
 			    weight_filler {

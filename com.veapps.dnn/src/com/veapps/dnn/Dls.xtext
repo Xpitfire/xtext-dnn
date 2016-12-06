@@ -11,8 +11,10 @@ Network:
 		'image-size' ASSIGN imgSize=INTEGER &
 		'image-channels' ASSIGN imgChannels=INTEGER &
 		'batch-size' ASSIGN batchSize=INTEGER &
+		'output-labels' ASSIGN outputLabels=INTEGER &		
 		('train-data-path' ASSIGN trainPath=STRING)? &
 		('val-data-path' ASSIGN valPath=STRING)? &
+		'caffe-path' ASSIGN caffePath=STRING &
 		'output-path' ASSIGN outputPath=STRING &
 		('seed' ASSIGN seed=ZINTEGER)? &
 		'updater' REFERENCE updaterType=UpdaterType &
@@ -71,7 +73,7 @@ InParam:
 ;
 
 OutParam:
-	'out' ':' value=(INTEGER | 'classes')
+	'out' ':' value=(INTEGER | 'labels')
 ;
 
 enum PoolingType:
