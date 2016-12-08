@@ -4,7 +4,7 @@
 <dict>
 	<key>fileTypes</key>
 	<array>
-		<string>*.mydsl</string>
+		<string>*.dls</string>
 	</array>
 	<key>name</key>
 	<string>mydsl</string>
@@ -14,7 +14,7 @@
 			<key>name</key>
 			<string>keyword.control.mydsl</string>
 			<key>match</key>
-			<string>\b(network|conv|pool|dense)\b</string>
+			<string>\b(network|conv|pool|dense|in|out|name)\b</string>
 		</dict>
 	</array>
 	<key>scopeName</key>

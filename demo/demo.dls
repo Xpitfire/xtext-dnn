@@ -10,7 +10,7 @@ network "TestNet" {
 	updater -> sgd
 	learningRate = 0.003
 
-	conv (name:"c1" in:data out:16) { 
+	conv (name:"conv1" in:data out:16) { 
 		kernel-size = 6, 
 		stride = 2
 	}

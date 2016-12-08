@@ -13,13 +13,6 @@ Requires Visual Studio Code (VS Code) with version 1.4.0 or greater to be on the
 
 This will start VS Code and after a few seconds load the `demo` folder of this repository.
 
-## Project Structure
-
-- `vscode-extension` (node based VS Code extension to run with a separate server using socket)
-- `vscode-extension-self-contained` (node based VS Code extension to run with a embedded server using process io)
-- `com.veapps.dnn` (contains the dsl)
-- `com.veapps.dnn.ide` (contains the dsl specific customizations of the Xtext language server)
-
 ## Building in Details
 
 1. Make sure that `java -version` is executable and pointing to a Java 8+ JDK.
