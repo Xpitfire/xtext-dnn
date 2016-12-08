@@ -14,7 +14,7 @@ network "TestNet" {
 		kernel-size = 6, 
 		stride = 2
 	}
-    conv (name: "conv" out:16) {
+    conv (name: "conv2" out:16) {
         kernel-size = 3,
         stride = 1
     }

@@ -14,7 +14,7 @@
 			<key>name</key>
 			<string>keyword.control.mydsl</string>
 			<key>match</key>
-			<string>\b(Hello|from)\b</string>
+			<string>\b(network|conv|pool|dense)\b</string>
 		</dict>
 	</array>
 	<key>scopeName</key>

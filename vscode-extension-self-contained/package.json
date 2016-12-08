@@ -1,17 +1,17 @@
 {
-    "name": "xtext-vscode-example",
-    "displayName": "Xtext VS Code example",
-    "description": "A simple DSL example for VS Code",
-    "version": "0.0.13",
+    "name": "xtext-dnn",
+    "displayName": "Xtext VS Code DNN",
+    "description": "A DSL for Deep Neural Networks based on Caffe Script",
+    "version": "0.0.1",
     "publisher": "itemis",
     "icon": "images/itemis.png",
     "license": "EPL-1.0",
     "repository" : { 
         "type" : "git",
-        "url" : "https://github.com/itemis/xtext-languageserver-example.git"
+        "url" : "https://github.com/Xpitfire/xtext-dnn.git"
     },
     "bugs": {
-        "url": "https://github.com/itemis/xtext-languageserver-example/issues"
+        "url": "https://github.com/Xpitfire/xtext-dnn/issues"
     },
     "engines": {
         "vscode": "^1.6.0"
