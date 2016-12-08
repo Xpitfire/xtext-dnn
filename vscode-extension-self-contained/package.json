@@ -1,17 +1,17 @@
 {
-    "name": "xtext-DNN",
-    "displayName": "Xtext VS Code DNN",
-    "description": "DSL DSL for Deep Learning Scripting for VS Code",
-    "version": "0.0.1",
+    "name": "xtext-vscode-example",
+    "displayName": "Xtext VS Code example",
+    "description": "A simple DSL example for VS Code",
+    "version": "0.0.13",
     "publisher": "itemis",
     "icon": "images/itemis.png",
     "license": "EPL-1.0",
     "repository" : { 
         "type" : "git",
-        "url" : "https://github.com/Xpitfire/xtext-dnn"
+        "url" : "https://github.com/itemis/xtext-languageserver-example.git"
     },
     "bugs": {
-        "url": "https://github.com/Xpitfire/xtext-dnn/issues"
+        "url": "https://github.com/itemis/xtext-languageserver-example/issues"
     },
     "engines": {
         "vscode": "^1.6.0"
@@ -20,27 +20,27 @@
         "Languages"
     ],
     "activationEvents": [
-        "onLanguage:dls"
+        "onLanguage:mydsl"
     ],
     "main": "out/extension",
     "contributes": {
         "languages": [
             {
-                "id": "dls",
+                "id": "mydsl",
                 "aliases": [
-                    "dls"
+                    "mydsl"
                 ],
                 "extensions": [
-                    ".dls"
+                    ".mydsl"
                 ],
-                "configuration": "./dls.configuration.json"
+                "configuration": "./mydsl.configuration.json"
             }
         ],
         "grammars": [
             {
-                "language": "dls",
-                "scopeName": "text.dls",
-                "path": "./syntaxes/dls.tmLanguage"
+                "language": "mydsl",
+                "scopeName": "text.mydsl",
+                "path": "./syntaxes/mydsl.tmLanguage"
             }
         ]
     },

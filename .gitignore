@@ -13,9 +13,6 @@ xtend-gen
 bin/
 
 # IntelliJ
-*.ipr
-*.iws
-.idea/
 out/
 
 # Gradle

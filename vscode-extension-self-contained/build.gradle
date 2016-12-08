@@ -1,8 +1,8 @@
 task copyApplication(type: Sync) {
-    def installDistTask = project(':com.veapps.dnn.ide').tasks.installDist
+    def installDistTask = project(':org.xtext.example.mydsl.ide').tasks.installDist
     dependsOn installDistTask
     from installDistTask.outputs
-    into 'src/dls'
+    into 'src/mydsl'
 }
 
 clean << {

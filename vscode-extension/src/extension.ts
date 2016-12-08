@@ -22,7 +22,7 @@ export function activate(context: ExtensionContext) {
     };
     
     let clientOptions: LanguageClientOptions = {
-        documentSelector: ['dls'],
+        documentSelector: ['mydsl'],
         synchronize: {
             fileEvents: workspace.createFileSystemWatcher('**/*.*')
         }

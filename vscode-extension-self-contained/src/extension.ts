@@ -7,8 +7,8 @@ import { workspace, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 
 export function activate(context: ExtensionContext) {
-    // The server is a locally installed in src/dls
-    let script = context.asAbsolutePath(path.join('src', 'dls', 'bin', 'dls-standalone'));
+    // The server is a locally installed in src/mydsl
+    let script = context.asAbsolutePath(path.join('src', 'mydsl', 'bin', 'mydsl-standalone'));
     
     let serverOptions: ServerOptions = {
         run : { command: script },
@@ -16,7 +16,7 @@ export function activate(context: ExtensionContext) {
     };
     
     let clientOptions: LanguageClientOptions = {
-        documentSelector: ['dls'],
+        documentSelector: ['mydsl'],
         synchronize: {
             fileEvents: workspace.createFileSystemWatcher('**/*.*')
         }
