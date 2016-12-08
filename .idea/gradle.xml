@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../xtext-dnn" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/org.xtext.example.mydsl" />
+            <option value="$PROJECT_DIR$/org.xtext.example.mydsl.ide" />
+            <option value="$PROJECT_DIR$/org.xtext.example.mydsl.tests" />
+            <option value="$PROJECT_DIR$/vscode-extension" />
+            <option value="$PROJECT_DIR$/vscode-extension-self-contained" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

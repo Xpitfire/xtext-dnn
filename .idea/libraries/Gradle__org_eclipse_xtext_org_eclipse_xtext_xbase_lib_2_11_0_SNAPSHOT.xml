@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.11.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.eclipse.xtext/org.eclipse.xtext.xbase.lib/2.11.0-SNAPSHOT/e7a241cb251a46cc9ac4550d00caa50ea19c7d7/org.eclipse.xtext.xbase.lib-2.11.0-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.eclipse.xtext/org.eclipse.xtext.xbase.lib/2.11.0-SNAPSHOT/f8c68767d0c60b9ff6d2c7fbc8646617634abba9/org.eclipse.xtext.xbase.lib-2.11.0-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
