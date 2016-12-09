@@ -412,6 +412,17 @@ class MyDslGenerator extends AbstractGenerator {
 			bottom: "«curLayer.layerName.name»"
 			top: "«curLayer.layerName.name»"
 		}
+        «IF layer.layerBody != null && layer.layerBody.dropout != null»
+layer {
+    name: "drop_«curLayer.layerName.name»"
+    type: "Dropout"
+    bottom: "«curLayer.layerName.name»"
+    top: "«curLayer.layerName.name»"
+    dropout_param {
+        dropout_ratio: «layer.layerBody.dropout»
+    }
+}
+        «ENDIF»
 		'''
 
         if (layer.poolLayerBody != null) {
