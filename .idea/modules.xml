@@ -13,7 +13,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/org.xtext.example.mydsl/org.xtext.example.mydsl_test.iml" filepath="$PROJECT_DIR$/.idea/modules/org.xtext.example.mydsl/org.xtext.example.mydsl_test.iml" group="org.xtext.example.mydsl" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/vscode-extension/vscode-extension.iml" filepath="$PROJECT_DIR$/.idea/modules/vscode-extension/vscode-extension.iml" group="vscode-extension" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/vscode-extension-self-contained/vscode-extension-self-contained.iml" filepath="$PROJECT_DIR$/.idea/modules/vscode-extension-self-contained/vscode-extension-self-contained.iml" group="vscode-extension-self-contained" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/xtext-languageserver-example.iml" filepath="$PROJECT_DIR$/.idea/modules/xtext-languageserver-example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/xtext-dnn.iml" filepath="$PROJECT_DIR$/.idea/modules/xtext-dnn.iml" />
     </modules>
   </component>
 </project>
