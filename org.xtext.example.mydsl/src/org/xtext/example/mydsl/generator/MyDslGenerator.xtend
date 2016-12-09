@@ -371,7 +371,11 @@ class MyDslGenerator extends AbstractGenerator {
 		    pooling_param {
 		        kernel_size: «layerTuple.out.value»
 		        «IF layer.poolLayerBody != null»
+		        «IF layer.poolLayerBody.stride == null»
+		        stride: 1
+		        «ELSE»
 		        stride: «layer.poolLayerBody.stride»
+		        «ENDIF»
 		        pool: «layer.poolLayerBody.poolingType»
 		        «ENDIF»
 		    }
@@ -453,7 +457,11 @@ layer {
 			convolution_param {
 				num_output: «layerTuple.out.value»
 			    kernel_size: «convBody.kernelSize»
+			    «IF convBody.stride == null»
+			    stride: 1
+			    «ELSE»
 			    stride: «convBody.stride»
+			    «ENDIF»
 			    weight_filler {
 			      type: "«weightInit»"
 			    }
