@@ -17,12 +17,39 @@ class MyDslValidator extends AbstractMyDslValidator {
 	public static val INVALID_NAME = 'invalidName'
 
 	@Check
-	def checkGreetingStartsWithCapital(Network greeting) {
-		if (!Character.isUpperCase(greeting.name.charAt(0))) {
+	def checkNetworkStartsWithCapital(Network network) {
+		if (!Character.isUpperCase(network.name.charAt(0))) {
 			error('Name should start with a capital', 
 					MyDslPackage.Literals.NETWORK__NAME,
 					INVALID_NAME)
 		}
 	}
-	
+
+    @Check
+    def checkLearningRate(Network network) {
+
+    }
+/*
+    public static val DUPLICATE_NAME = 'HelloCustomEcoreDuplicateName'
+
+    @Check
+    def checkDuplicateElements(Model model) {
+        val nameMap = <String,Element>Multimaps2.newLinkedHashListMultimap
+
+        for (e : model.elements)
+            nameMap.put(e.name, e)
+
+        for (entry : nameMap.asMap.entrySet) {
+            val duplicates = entry.value
+            if (duplicates.size > 1) {
+                for (d : duplicates)
+                    error(
+                            "Duplicate name '" + entry.key + "' (" + d.eClass.name + ")",
+                            d,
+                            null,
+                            DUPLICATE_NAME);
+            }
+        }
+    }
+*/
 }

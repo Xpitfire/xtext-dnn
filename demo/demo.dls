@@ -15,6 +15,11 @@ network "TestNet" {
     conv   (name: "c2" 		   out:16)     { kernel-size = 3, stride = 1 }
 	conv   (name: "c3"         out:7)      { kernel-size = 3, stride = 1 }
 
+	branch (name:"b1" in:"c3" out:4) {
+		conv   (name: "bc1" 		   out:16)     { kernel-size = 3, stride = 1 }
+		conv   (name: "bc2" 		   out:16)     { kernel-size = 3, stride = 1 }
+	}
+
 	pool   (name: "p1"         out:3)      { type -> MAX,     stride = 1 }
 
 	dense [(name: "d1"         out:1024), 

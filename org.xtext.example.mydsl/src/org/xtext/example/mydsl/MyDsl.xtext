@@ -1,6 +1,9 @@
-grammar org.xtext.example.mydsl.MyDsl with org.eclipse.xtext.common.Terminals
+grammar org.xtext.example.mydsl.MyDsl
+    with org.eclipse.xtext.common.Terminals
 
 generate myDsl "http://www.xtext.org/example/mydsl/MyDsl"
+
+import "http://www.eclipse.org/emf/2002/Ecore"
 
 Model:
 	network=Network;
@@ -18,8 +21,8 @@ Network:
 	'output-path' ASSIGN outputPath=STRING &
 	('seed' ASSIGN seed=ZINTEGER)? &
 	'updater' REFERENCE updaterType=UpdaterType &
-	'learningRate' ASSIGN learningRate=REAL
-	layers+=Layer*
+	'learningRate' ASSIGN learningRate=REAL &
+	layers+=Layer* &
 	'}'
 ;
 
@@ -27,13 +30,12 @@ Layer:
 	type='conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
 	| type='pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody '}'
 	| type='dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
-	| type='branch' name=STRING '{' branchBody=BranchBody branchLayers+=(Layer)* '}'
+	| type='branch' layerDecl=LayerTuple '{' branchBody=BranchBody branchLayers+=(Layer)* '}'
 ;
 
 BranchBody:
-	'in' ':' in=STRING &
-	'out' ':' out=STRING &
-	(SEPARATOR)*
+    'type' REFERENCE type=BranchType &
+    'operation' REFERENCE operation=OperationType
 ;
 
 LayerBody:
@@ -74,7 +76,15 @@ InParam:
 ;
 
 OutParam:
-	'out' ':' value=(INTEGER | 'labels')
+	'out' ':' (value=INTEGER | strValue='labels')
+;
+
+enum BranchType:
+    RESIDUAL='residual'
+;
+
+enum OperationType:
+    PROD='PROD' | SUM='SUM'
 ;
 
 enum PoolingType:
@@ -82,7 +92,7 @@ enum PoolingType:
 ;
 
 enum ActivationFunctionType:
-	SIGMOID='Sigmoid' | TANH='TanH' | RELU='ReLU'
+	RELU='ReLU' | SIGMOID='Sigmoid' | TANH='TanH'
 ;
 
 enum UpdaterType:
@@ -90,22 +100,22 @@ enum UpdaterType:
 ;
 
 enum WeightInitType:
-	CONSTANT='constant' | GAUSSIAN='gaussian' | XAVIER='xavier'
+	XAVIER='xavier' | CONSTANT='constant' | GAUSSIAN='gaussian'
 ;
 
-terminal EXT_INT:
-	INT ('e' | 'E')('-' | '+') INTEGER
+terminal EXT_INT returns EInt:
+    INTEGER ('e' | 'E')('-' | '+') INTEGER
 ;
 
-terminal INTEGER:
-	('1'..'9')(INT)*
+terminal INTEGER returns EInt:
+    ('1'..'9')(INT)*
 ;
 
-terminal ZINTEGER:
+terminal ZINTEGER returns EInt:
 	INT
 ;
 
-terminal REAL:
+terminal REAL returns EFloat:
 	INTEGER | INT '.' (EXT_INT | INT) (INT)*
 ;
 
@@ -119,6 +129,14 @@ terminal SEPARATOR:
 
 terminal REFERENCE:
 	'->'
+;
+
+terminal WS:
+    (' '|'\t'|'\r'|'\n')+
+;
+
+terminal SL_COMMENT:
+    '//' !('\n'|'\r')*
 ;
 
 terminal ML_COMMENT:

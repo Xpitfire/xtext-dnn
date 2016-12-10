@@ -14,6 +14,7 @@ import org.xtext.example.mydsl.myDsl.LayerDeclaration
 import org.eclipse.emf.common.util.EList
 import org.xtext.example.mydsl.myDsl.LayerBody
 import org.xtext.example.mydsl.myDsl.ConvLayerBody
+import org.xtext.example.mydsl.myDsl.BranchBody
 
 /**
  * Generates code from your model files on save.
@@ -30,6 +31,7 @@ class MyDslGenerator extends AbstractGenerator {
     val String defaultWeightsInit = 'xavier'
     val String defaultBiasInit = 'constant'
     val String defaultOutputLabels = 'labels'
+    var String fileName = 'network'
 
     // https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
     // http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/
@@ -45,31 +47,31 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def generatePostImageScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("post-db-image.sh", '''
+        fsa.generateFile(fileName + "-post-db-image.sh", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
-		«net.caffePath»/build/tools/compute_image_mean -backend=lmdb «net.outputPath»/train_db «net.outputPath»/mean.binaryproto
+		«net.caffePath»/build/tools/compute_image_mean -backend=lmdb «net.outputPath»/train_db «net.outputPath»/«fileName»-mean.binaryproto
 		«ENDFOR»
 		''')
     }
 
     def generatePrintGraphScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("print-graph.sh", '''
+        fsa.generateFile(fileName + "-print-graph.sh", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
-		python «net.caffePath»/python/draw_net.py «net.outputPath»/network.prototxt «net.outputPath»/caffe_model.png
+		python «net.caffePath»/python/«fileName»-draw_net.py «net.outputPath»/«fileName»-network.prototxt «net.outputPath»/«fileName»-caffe_model.png
 		«ENDFOR»
 		''')
     }
 
     def generateTrainScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("train.sh", '''
+        fsa.generateFile(fileName + "-train.sh", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
-		caffe train --solver «net.outputPath»/solver.prototxt 2>&1 | tee «net.outputPath»/model_train.log
+		caffe train --solver «net.outputPath»/«fileName»-solver.prototxt 2>&1 | tee «net.outputPath»/«fileName»-model_train.log
 		«ENDFOR»
 		''')
     }
 
     def generateCreateDbScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("create-db.py", '''
+        fsa.generateFile(fileName + "-create-db.py", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
 		import os
 		import glob
@@ -203,7 +205,7 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def generateSolverFile(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("solver.prototxt", '''
+        fsa.generateFile(fileName + "-solver.prototxt", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
 		net: "«net.outputPath»/network.prototxt"
 		test_iter: 1000
@@ -224,7 +226,7 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def generateExecutionScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("predict.py", '''
+        fsa.generateFile(fileName + "-predict.py", '''
 		import numpy as np
 		import matplotlib.pyplot as plt
 		import sys
@@ -232,7 +234,7 @@ class MyDslGenerator extends AbstractGenerator {
 
 		# Set the right path to your model definition file, pretrained model weights,
 		# and the image you would like to classify.
-		MODEL_FILE = 'network.prototxt'
+		MODEL_FILE = '«fileName»-network.prototxt'
 		PRETRAINED = 'network.caffemodel'
 
 		# load the model
@@ -255,8 +257,9 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def void generateProtoTxtFile(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile("network.prototxt", '''
+        val String result = '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
+		«fileName = net.name»
 		name: "«net.name»"
 		layer {
 			name: "train-data"
@@ -266,7 +269,7 @@ class MyDslGenerator extends AbstractGenerator {
 			transform_param {
 		    	mirror: true
 		    	crop_size: «net.imgSize»
-		    	#mean_file: «net.outputPath»/mean.binaryproto
+		    	#mean_file: «net.outputPath»/«fileName»-mean.binaryproto
 			}
 			data_param {
 				«IF net.trainPath != null»
@@ -285,7 +288,7 @@ class MyDslGenerator extends AbstractGenerator {
 			transform_param {
 				mirror: false
 				crop_size: «net.imgSize»
-				#mean_file: «net.outputPath»/mean.binaryproto
+				#mean_file: «net.outputPath»/«fileName»-mean.binaryproto
 			}
 			data_param {
 				«IF net.valPath != null»
@@ -322,12 +325,33 @@ class MyDslGenerator extends AbstractGenerator {
 			top: "softmax"
 			include { stage: "deploy" }
 		}
-		«ENDFOR»''')
+		«ENDFOR»
+		'''
+        fsa.generateFile(fileName + "-network.prototxt", result)
 
         weightInit = null
         biasInit = null
         prevLayer = null
         curLayer = null
+    }
+
+    def String generateBranchLayer(Network net, BranchBody branchBody, EList<Layer> branchLayers, LayerTuple layerTuple) {
+        val String result = '''
+        «FOR layer : branchLayers»
+        «generateLayer(net, layer)»
+        «ENDFOR»
+        layer {
+            bottom: "«layerTuple.in.name»"
+            bottom: "«curLayer.layerName.name»"
+            top: "«layerTuple.layerName.name»"
+            name: "«layerTuple.layerName.name»"
+            type: "Eltwise"
+            eltwise_param { operation: «branchBody.operation» }
+        }
+        '''
+        prevLayer = curLayer
+        curLayer = layerTuple
+        return result
     }
 
     def String generateLayer(Network net, Layer layer) {
@@ -349,6 +373,11 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def String generateSimpleLayer(Network net, Layer layer, LayerTuple layerTuple) {
+        var String branchLayer
+        if (layer.type == 'branch') {
+            branchLayer = generateBranchLayer(net, layer.branchBody, layer.branchLayers, layerTuple);
+        }
+
         prevLayer = curLayer
         curLayer = layerTuple
 
@@ -362,8 +391,10 @@ class MyDslGenerator extends AbstractGenerator {
 
         val String poolingLayer = '''
 		layer {
+
 			«IF prevLayer != null»
-			bottom: "«prevLayer.layerName.name»"
+
+            bottom: "«prevLayer.layerName.name»"
 		    «ENDIF»
 		    top: "«curLayer.layerName.name»"
 		    name: "«curLayer.layerName.name»"
@@ -371,7 +402,7 @@ class MyDslGenerator extends AbstractGenerator {
 		    pooling_param {
 		        kernel_size: «layerTuple.out.value»
 		        «IF layer.poolLayerBody != null»
-		        «IF layer.poolLayerBody.stride == null»
+		        «IF layer.poolLayerBody.stride <= 0»
 		        stride: 1
 		        «ELSE»
 		        stride: «layer.poolLayerBody.stride»
@@ -416,21 +447,24 @@ class MyDslGenerator extends AbstractGenerator {
 			bottom: "«curLayer.layerName.name»"
 			top: "«curLayer.layerName.name»"
 		}
-        «IF layer.layerBody != null && layer.layerBody.dropout != null»
-layer {
-    name: "drop_«curLayer.layerName.name»"
-    type: "Dropout"
-    bottom: "«curLayer.layerName.name»"
-    top: "«curLayer.layerName.name»"
-    dropout_param {
-        dropout_ratio: «layer.layerBody.dropout»
-    }
-}
+		«IF layer.layerBody != null && layer.layerBody.dropout > 0»
+
+        layer {
+            name: "drop_«curLayer.layerName.name»"
+            type: "Dropout"
+            bottom: "«curLayer.layerName.name»"
+            top: "«curLayer.layerName.name»"
+            dropout_param {
+                dropout_ratio: «layer.layerBody.dropout»
+            }
+        }
         «ENDIF»
 		'''
 
-        if (layer.poolLayerBody != null) {
+        if (layer.type == 'pool') {
             layerResult = poolingLayer
+        } else if (layer.type == 'branch') {
+            layerResult = branchLayer
         } else {
             layerResult = neuralLayer
         }
@@ -457,7 +491,7 @@ layer {
 			convolution_param {
 				num_output: «layerTuple.out.value»
 			    kernel_size: «convBody.kernelSize»
-			    «IF convBody.stride == null»
+			    «IF convBody.stride <= 0»
 			    stride: 1
 			    «ELSE»
 			    stride: «convBody.stride»
@@ -478,7 +512,7 @@ layer {
 
         return '''
 			inner_product_param {
-				«IF layerTuple.out.value == defaultOutputLabels»
+				«IF layerTuple.out.strValue == defaultOutputLabels»
 				num_output: «net.outputLabels»
 				«ELSE»
 				num_output: «layerTuple.out.value»
