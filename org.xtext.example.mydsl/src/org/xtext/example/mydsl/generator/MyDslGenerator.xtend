@@ -259,8 +259,7 @@ class MyDslGenerator extends AbstractGenerator {
     def void generateProtoTxtFile(Resource resource, IFileSystemAccess2 fsa) {
         val String result = '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
-		«fileName = net.name»
-		name: "«net.name»"
+		name: "«fileName = net.name»"
 		layer {
 			name: "train-data"
 			type: "Data"
