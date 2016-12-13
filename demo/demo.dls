@@ -1,4 +1,4 @@
-network "TestNet" {
+network "DemoNet" {
 	epochs = 10
 	batch-size = 50
 	image-size = 28
@@ -11,15 +11,17 @@ network "TestNet" {
 	updater -> sgd
 	learningRate = 0.003
 
-	conv   (name: "c1" in:data out:64)             { kernel-size = 6 }
-    conv   (name: "c2" 		   out:32)             { kernel-size = 3 }
-	conv   (name: "c3"         out:32)             { kernel-size = 1 }
+	conv   (name: "c1" in:data out:64)     { kernel-size = 6 }
+    conv   (name: "c2" 		   out:32)     { kernel-size = 3 }
+	conv   (name: "c3"         out:32)     { kernel-size = 1 }
 
-	branch (name:"b1" in:"c3" out:32) {
+	branch (name: "b1" in:"c3" out:32)     {
 		operation -> PROD
 		type -> residual
 
-		conv   (name: "bc1" 		   out:32)     { kernel-size = 1 }
+		conv (name: "bc1"      out:32)     { kernel-size = 1 }
+		norm (name: "bn1")				   { use-global-stats = true }
+		scale(name: "bs1") 				   { use-bias-term = true }
 	}
 
 	pool   (name: "p1"         out:3)      { type -> MAX, stride = 1 }

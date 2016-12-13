@@ -15,6 +15,7 @@ import org.eclipse.emf.common.util.EList
 import org.xtext.example.mydsl.myDsl.LayerBody
 import org.xtext.example.mydsl.myDsl.ConvLayerBody
 import org.xtext.example.mydsl.myDsl.BranchBody
+import org.xtext.example.mydsl.myDsl.impl.InParamImpl
 
 /**
  * Generates code from your model files on save.
@@ -23,22 +24,24 @@ import org.xtext.example.mydsl.myDsl.BranchBody
  */
 class MyDslGenerator extends AbstractGenerator {
 
-    String weightInit
-    String biasInit
-    LayerTuple prevLayer;
-    LayerTuple curLayer;
+    var String weightInit
+    var String biasInit
+    var LayerTuple prevLayer = null
+    var LayerTuple curLayer = null
+    var LayerTuple forceLayer = null
 
     val String defaultWeightsInit = 'xavier'
     val String defaultBiasInit = 'constant'
     val String defaultOutputLabels = 'labels'
     var String fileName = 'network'
+    var String inLayerPrexif = ''
 
     // https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
     // http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/
 
     override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-        generateSolverFile(resource, fsa)
         generateProtoTxtFile(resource, fsa)
+        generateSolverFile(resource, fsa)
         generateExecutionScript(resource, fsa)
         generateCreateDbScript(resource, fsa)
         generatePostImageScript(resource, fsa)
@@ -304,7 +307,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "accuracy"
 			type: "Accuracy"
-			bottom: "final-layer"
+			bottom: "«inLayerPrexif»final-layer"
 			bottom: "label"
 			top: "accuracy"
 			include { stage: "val" }
@@ -312,7 +315,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "loss"
 			type: "SoftmaxWithLoss"
-			bottom: "final-layer"
+			bottom: "«inLayerPrexif»final-layer"
 			bottom: "label"
 			top: "loss"
 			exclude { stage: "deploy" }
@@ -320,7 +323,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "softmax"
 			type: "Softmax"
-			bottom: "final-layer"
+			bottom: "«inLayerPrexif»final-layer"
 			top: "softmax"
 			include { stage: "deploy" }
 		}
@@ -335,6 +338,7 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def String generateBranchLayer(Network net, BranchBody branchBody, EList<Layer> branchLayers, LayerTuple layerTuple) {
+        forceLayer = layerTuple
         val String result = '''
         «FOR layer : branchLayers»
         «generateLayer(net, layer)»
@@ -342,12 +346,13 @@ class MyDslGenerator extends AbstractGenerator {
         layer {
             bottom: "«layerTuple.in.name»"
             bottom: "«curLayer.layerName.name»"
-            top: "«layerTuple.layerName.name»"
-            name: "«layerTuple.layerName.name»"
+            top: "«inLayerPrexif = 'eltw-'»«layerTuple.layerName.name»"
+            name: "«inLayerPrexif»«layerTuple.layerName.name»"
             type: "Eltwise"
             eltwise_param { operation: «branchBody.operation» }
         }
         '''
+
         prevLayer = curLayer
         curLayer = layerTuple
         return result
@@ -372,28 +377,26 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def String generateSimpleLayer(Network net, Layer layer, LayerTuple layerTuple) {
-        var String branchLayer
-        if (layer.type == 'branch') {
-            branchLayer = generateBranchLayer(net, layer.branchBody, layer.branchLayers, layerTuple);
-        }
-
         prevLayer = curLayer
         curLayer = layerTuple
 
-        var String activation
-        if (layer.layerBody != null && layer.layerBody.activType != null)
-            activation = layer.layerBody.activType.toString
-        else
-            activation = 'ReLU'
-
         var String layerResult
-
-        val String poolingLayer = '''
+        if (layer.type == 'pool') {
+            val String poolingLayer = '''
 		layer {
+            «IF prevLayer == null»
 
-			«IF prevLayer != null»
+			bottom: "data"
+			«ELSEIF forceLayer != null»
 
-            bottom: "«prevLayer.layerName.name»"
+			bottom: "«forceLayer.in.name»"
+			«ELSEIF curLayer.in == null»
+
+        bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+
+            «ELSE»
+
+        bottom: "«inLayerPrexif»«curLayer.in.name»"
 		    «ENDIF»
 		    top: "«curLayer.layerName.name»"
 		    name: "«curLayer.layerName.name»"
@@ -411,8 +414,91 @@ class MyDslGenerator extends AbstractGenerator {
 		    }
 		}
 		'''
+            layerResult = poolingLayer
+            if (inLayerPrexif != '')
+                inLayerPrexif = ''
+            if (forceLayer != null)
+                forceLayer = null
+        } else if (layer.type == 'branch') {
+            var String branchLayer
+            branchLayer = generateBranchLayer(net, layer.branchBody, layer.branchLayers, layerTuple);
+            layerResult = branchLayer
+        } else if (layer.type == 'norm') {
+            if (curLayer.out == null)
+                curLayer.out = prevLayer.out
 
-        val String neuralLayer = '''
+            val String normLayer = '''
+        layer {
+            «IF prevLayer == null»
+
+			bottom: "data"
+			«ELSEIF forceLayer != null»
+
+			bottom: "«forceLayer.in.name»"
+			«ELSEIF curLayer.in == null»
+            bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+            «ELSE»
+            bottom: "«inLayerPrexif»«curLayer.in.name»"
+            «ENDIF»
+            top: "«curLayer.layerName.name»"
+            name: "«curLayer.layerName.name»"
+            type: "BatchNorm"
+            batch_norm_param {
+                «IF layer.batchNormBody.useGlobalStats == null || layer.batchNormBody.useGlobalStats == 'true'»
+                use_global_stats: true
+                «ELSE»
+                use_global_stats: false
+                «ENDIF»
+            }
+        }
+        '''
+            layerResult = normLayer
+            if (inLayerPrexif != '')
+                inLayerPrexif = ''
+            if (forceLayer != null)
+                forceLayer = null
+        } else if (layer.type == 'scale') {
+            if (curLayer.out == null)
+                curLayer.out = prevLayer.out
+
+            val String scaleLayer = '''
+        layer {
+            «IF prevLayer == null»
+
+		    bottom: "data"
+			«ELSEIF forceLayer != null»
+
+			bottom: "«forceLayer.in.name»"
+            «ELSEIF curLayer.in == null»
+            bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+            «ELSE»
+            bottom: "«inLayerPrexif»«curLayer.in.name»"
+            «ENDIF»
+            top: "«curLayer.layerName.name»"
+            name: "«curLayer.layerName.name»"
+            type: "Scale"
+            scale_param {
+                «IF layer.scaleNormBody.useBiasTerm == null || layer.scaleNormBody.useBiasTerm == 'true'»
+                bias_term: true
+                «ELSE»
+                bias_term: false
+                «ENDIF»
+            }
+        }
+        '''
+            layerResult = scaleLayer
+            if (inLayerPrexif != '')
+                inLayerPrexif = ''
+            if (forceLayer != null)
+                forceLayer = null
+        } else {
+            var String activation
+            if (layer.layerBody != null && layer.layerBody.activType != null)
+                activation = layer.layerBody.activType.toString
+            else
+                activation = 'ReLU'
+
+            val String neuralLayer = '''
 		layer {
 			name: "«curLayer.layerName.name»"
 			«IF layer.type == 'conv'»
@@ -423,8 +509,12 @@ class MyDslGenerator extends AbstractGenerator {
 			«ENDIF»
 			«IF prevLayer == null»
 			bottom: "data"
+			«ELSEIF forceLayer != null»
+			bottom: "«forceLayer.in.name»"
+			«ELSEIF curLayer.in == null»
+			bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
 			«ELSE»
-			bottom: "«prevLayer.layerName.name»"
+			bottom: "«inLayerPrexif»«curLayer.in.name»"
 			«ENDIF»
 			top: "«curLayer.layerName.name»"
 			param {
@@ -459,13 +549,11 @@ class MyDslGenerator extends AbstractGenerator {
         }
         «ENDIF»
 		'''
-
-        if (layer.type == 'pool') {
-            layerResult = poolingLayer
-        } else if (layer.type == 'branch') {
-            layerResult = branchLayer
-        } else {
             layerResult = neuralLayer
+            if (inLayerPrexif != '')
+                inLayerPrexif = ''
+            if (forceLayer != null)
+                forceLayer = null
         }
         return layerResult
     }

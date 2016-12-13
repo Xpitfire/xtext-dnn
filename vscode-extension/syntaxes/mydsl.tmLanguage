@@ -14,7 +14,7 @@
 			<key>name</key>
 			<string>keyword.control.mydsl</string>
 			<key>match</key>
-			<string>\b(network|conv|pool|dense|in|out|name|branch)\b</string>
+			<string>\b(network|conv|pool|dense|in|out|name|branch|norm|scale)\b</string>
 		</dict>
 	</array>
 	<key>scopeName</key>

@@ -22,7 +22,7 @@ Network:
 	('seed' ASSIGN seed=ZINTEGER)? &
 	'updater' REFERENCE updaterType=UpdaterType &
 	'learningRate' ASSIGN learningRate=REAL &
-	layers+=Layer* &
+	layers+=Layer*
 	'}'
 ;
 
@@ -30,7 +30,17 @@ Layer:
 	type='conv' layerDecl=LayerDeclaration '{' convLayerBody=ConvLayerBody layerBody=LayerBody '}'
 	| type='pool' layerDecl=LayerTuple '{' poolLayerBody=PoolLayerBody '}'
 	| type='dense' layerDecl=LayerDeclaration ('{' layerBody=LayerBody '}')?
+	| type='norm' layerDecl=LayerTuple '{' batchNormBody=BachNormBody '}'
+    | type='scale' layerDecl=LayerTuple '{' scaleNormBody=ScaleNormBody '}'
 	| type='branch' layerDecl=LayerTuple '{' branchBody=BranchBody branchLayers+=(Layer)* '}'
+;
+
+ScaleNormBody:
+    'use-bias-term' ASSIGN useBiasTerm=Decission
+;
+
+BachNormBody:
+    'use-global-stats' ASSIGN useGlobalStats=Decission
 ;
 
 BranchBody:
@@ -64,7 +74,7 @@ LayerDeclaration:
 ;
 
 LayerTuple:
-	'(' layerName=LayerName (in=InParam)? out=OutParam ')'
+	'(' layerName=LayerName (in=InParam)? (out=OutParam)? ')'
 ;
 
 LayerName:
@@ -76,7 +86,11 @@ InParam:
 ;
 
 OutParam:
-	'out' ':' (value=INTEGER | strValue='labels')
+	'out' ':' (value=INTEGER | strValue='labels' | strValue='pass')
+;
+
+enum Decission:
+    TRUE='true' | FALSE='false'
 ;
 
 enum BranchType:
