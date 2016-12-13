@@ -28,13 +28,12 @@ class MyDslGenerator extends AbstractGenerator {
     var String biasInit
     var LayerTuple prevLayer = null
     var LayerTuple curLayer = null
-    var LayerTuple forceLayer = null
+    var LayerTuple tempLayer = null
 
     val String defaultWeightsInit = 'xavier'
     val String defaultBiasInit = 'constant'
     val String defaultOutputLabels = 'labels'
     var String fileName = 'network'
-    var String inLayerPrexif = ''
 
     // https://software.intel.com/en-us/articles/training-and-deploying-deep-learning-networks-with-caffe-optimized-for-intel-architecture
     // http://adilmoujahid.com/posts/2016/06/introduction-deep-learning-python-caffe/
@@ -307,7 +306,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "accuracy"
 			type: "Accuracy"
-			bottom: "«inLayerPrexif»final-layer"
+			bottom: "final-layer"
 			bottom: "label"
 			top: "accuracy"
 			include { stage: "val" }
@@ -315,7 +314,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "loss"
 			type: "SoftmaxWithLoss"
-			bottom: "«inLayerPrexif»final-layer"
+			bottom: "final-layer"
 			bottom: "label"
 			top: "loss"
 			exclude { stage: "deploy" }
@@ -323,7 +322,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "softmax"
 			type: "Softmax"
-			bottom: "«inLayerPrexif»final-layer"
+			bottom: "final-layer"
 			top: "softmax"
 			include { stage: "deploy" }
 		}
@@ -338,7 +337,9 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def String generateBranchLayer(Network net, BranchBody branchBody, EList<Layer> branchLayers, LayerTuple layerTuple) {
-        forceLayer = layerTuple
+        tempLayer = prevLayer
+        val String tmp = layerTuple.layerName.name
+        layerTuple.layerName.name = prevLayer.layerName.name
         val String result = '''
         «FOR layer : branchLayers»
         «generateLayer(net, layer)»
@@ -346,14 +347,14 @@ class MyDslGenerator extends AbstractGenerator {
         layer {
             bottom: "«layerTuple.in.name»"
             bottom: "«curLayer.layerName.name»"
-            top: "«inLayerPrexif = 'eltw-'»«layerTuple.layerName.name»"
-            name: "«inLayerPrexif»«layerTuple.layerName.name»"
+            top: "«tmp»"
+            name: "«tmp»"
             type: "Eltwise"
             eltwise_param { operation: «branchBody.operation» }
         }
         '''
-
-        prevLayer = curLayer
+        layerTuple.layerName.name = tmp
+        prevLayer = tempLayer
         curLayer = layerTuple
         return result
     }
@@ -387,16 +388,13 @@ class MyDslGenerator extends AbstractGenerator {
             «IF prevLayer == null»
 
 			bottom: "data"
-			«ELSEIF forceLayer != null»
-
-			bottom: "«forceLayer.in.name»"
 			«ELSEIF curLayer.in == null»
 
-        bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+        bottom: "«prevLayer.layerName.name»"
 
             «ELSE»
 
-        bottom: "«inLayerPrexif»«curLayer.in.name»"
+        bottom: "«curLayer.in.name»"
 		    «ENDIF»
 		    top: "«curLayer.layerName.name»"
 		    name: "«curLayer.layerName.name»"
@@ -415,10 +413,6 @@ class MyDslGenerator extends AbstractGenerator {
 		}
 		'''
             layerResult = poolingLayer
-            if (inLayerPrexif != '')
-                inLayerPrexif = ''
-            if (forceLayer != null)
-                forceLayer = null
         } else if (layer.type == 'branch') {
             var String branchLayer
             branchLayer = generateBranchLayer(net, layer.branchBody, layer.branchLayers, layerTuple);
@@ -432,13 +426,10 @@ class MyDslGenerator extends AbstractGenerator {
             «IF prevLayer == null»
 
 			bottom: "data"
-			«ELSEIF forceLayer != null»
-
-			bottom: "«forceLayer.in.name»"
 			«ELSEIF curLayer.in == null»
-            bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+            bottom: "«prevLayer.layerName.name»"
             «ELSE»
-            bottom: "«inLayerPrexif»«curLayer.in.name»"
+            bottom: "«curLayer.in.name»"
             «ENDIF»
             top: "«curLayer.layerName.name»"
             name: "«curLayer.layerName.name»"
@@ -453,10 +444,6 @@ class MyDslGenerator extends AbstractGenerator {
         }
         '''
             layerResult = normLayer
-            if (inLayerPrexif != '')
-                inLayerPrexif = ''
-            if (forceLayer != null)
-                forceLayer = null
         } else if (layer.type == 'scale') {
             if (curLayer.out == null)
                 curLayer.out = prevLayer.out
@@ -466,13 +453,10 @@ class MyDslGenerator extends AbstractGenerator {
             «IF prevLayer == null»
 
 		    bottom: "data"
-			«ELSEIF forceLayer != null»
-
-			bottom: "«forceLayer.in.name»"
             «ELSEIF curLayer.in == null»
-            bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+            bottom: "«prevLayer.layerName.name»"
             «ELSE»
-            bottom: "«inLayerPrexif»«curLayer.in.name»"
+            bottom: "«curLayer.in.name»"
             «ENDIF»
             top: "«curLayer.layerName.name»"
             name: "«curLayer.layerName.name»"
@@ -487,10 +471,6 @@ class MyDslGenerator extends AbstractGenerator {
         }
         '''
             layerResult = scaleLayer
-            if (inLayerPrexif != '')
-                inLayerPrexif = ''
-            if (forceLayer != null)
-                forceLayer = null
         } else {
             var String activation
             if (layer.layerBody != null && layer.layerBody.activType != null)
@@ -509,12 +489,10 @@ class MyDslGenerator extends AbstractGenerator {
 			«ENDIF»
 			«IF prevLayer == null»
 			bottom: "data"
-			«ELSEIF forceLayer != null»
-			bottom: "«forceLayer.in.name»"
 			«ELSEIF curLayer.in == null»
-			bottom: "«inLayerPrexif»«prevLayer.layerName.name»"
+			bottom: "«prevLayer.layerName.name»"
 			«ELSE»
-			bottom: "«inLayerPrexif»«curLayer.in.name»"
+			bottom: "«curLayer.in.name»"
 			«ENDIF»
 			top: "«curLayer.layerName.name»"
 			param {
@@ -550,10 +528,6 @@ class MyDslGenerator extends AbstractGenerator {
         «ENDIF»
 		'''
             layerResult = neuralLayer
-            if (inLayerPrexif != '')
-                inLayerPrexif = ''
-            if (forceLayer != null)
-                forceLayer = null
         }
         return layerResult
     }

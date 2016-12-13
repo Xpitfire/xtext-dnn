@@ -1,8 +1,8 @@
 network "DemoNet" {
 	epochs = 10
 	batch-size = 50
-	image-size = 28
-    image-channels = 1
+	image-size = 32
+    image-channels = 3
     output-labels = 10
 
     caffe-path = "$CAFFE_HOME"
@@ -11,23 +11,24 @@ network "DemoNet" {
 	updater -> sgd
 	learningRate = 0.003
 
-	conv   (name: "c1" in:data out:64)     { kernel-size = 6 }
-    conv   (name: "c2" 		   out:32)     { kernel-size = 3 }
-	conv   (name: "c3"         out:32)     { kernel-size = 1 }
-
-	branch (name: "b1" in:"c3" out:32)     {
-		operation -> PROD
+	conv   (name: "c1" in:data out:128)    { kernel-size = 5 }
+	branch (name: "b1" in:"c1" out:128)    {
+		operation -> SUM
 		type -> residual
 
-		conv (name: "bc1"      out:32)     { kernel-size = 1 }
+		conv (name: "bc1" in:"c1" out:128)    { kernel-size = 1 }
 		norm (name: "bn1")				   { use-global-stats = true }
 		scale(name: "bs1") 				   { use-bias-term = true }
 	}
+	pool   (name: "p1"         out:2)      { type -> MAX, stride = 1 }
+	branch (name: "b2" in:"p1" out:128)    {
+		operation -> SUM
+		type -> residual
 
-	pool   (name: "p1"         out:3)      { type -> MAX, stride = 1 }
-
-	dense [(name: "d1"         out:512), 
-	       (name: "d2"         out:256)]
-
+		conv (name: "bc2" in:"p1" out:128)    { kernel-size = 1 }
+		norm (name: "bn2")				   { use-global-stats = true }
+		scale(name: "bs2") 				   { use-bias-term = true }
+	}
+	pool   (name: "p2"         out:2)      { type -> MAX, stride = 1 }
 	dense  (name: final-layer  out:labels)
 }
