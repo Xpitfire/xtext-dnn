@@ -33,14 +33,14 @@
                 "extensions": [
                     ".dls"
                 ],
-                "configuration": "./mydsl.configuration.json"
+                "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "dls",
                 "scopeName": "source.dls",
-                "path": "./syntaxes/mydsl.tmLanguage"
+                "path": "./syntaxes/dls.tmLanguage"
             }
         ]
     },

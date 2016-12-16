@@ -11,6 +11,7 @@ network "DemoNet" {
 	updater -> sgd
 	learningRate = 0.003
 
+
 	conv   (name: "conv1"   in:data    out:128) { kernel-size = 5 }
 	conv   (name: "conv2"              out:128) { kernel-size = 5 }
 	branch (name: "branch1" in:"conv2" out:128) {
@@ -35,4 +36,5 @@ network "DemoNet" {
 	conv   (name: "cconv5" out:16)    { kernel-size = 3 }
 	dense  (name: "dense1" out:64)
 	dense  (name: final-layer out:labels) { biasInit -> xavier }
+
 }
