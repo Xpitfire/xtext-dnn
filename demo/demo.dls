@@ -1,7 +1,7 @@
 network "DemoNet" {
-	epochs = 10  /*  eeseefesf */
+	epochs = 10
 	batch-size = 50
-	image-size = 32 // wunsch
+	image-size = 32
     image-channels = 3
     output-labels = 10
 	
