@@ -7,17 +7,17 @@
 		<string>*.dls</string>
 	</array>
 	<key>name</key>
-	<string>mydsl</string>
+	<string>dls</string>
 	<key>patterns</key>
 	<array>
 		<dict>
 			<key>name</key>
-			<string>keyword.control.mydsl</string>
+			<string>keyword.control.dls</string>
 			<key>match</key>
 			<string>\b(network|conv|pool|dense|in|out|name|branch|norm|scale)\b</string>
 		</dict>
 	</array>
 	<key>scopeName</key>
-	<string>text.mydsl</string>
+	<string>source.dls</string>
 </dict>
 </plist>

@@ -3,8 +3,8 @@
     "displayName": "Xtext VS Code DNN",
     "description": "A DSL for Deep Neural Networks based on Caffe Script",
     "version": "0.0.1",
-    "publisher": "itemis",
-    "icon": "images/itemis.png",
+    "publisher": "VeApps",
+    "icon": "images/VeApps.png",
     "license": "EPL-1.0",
     "repository" : { 
         "type" : "git",
@@ -20,13 +20,13 @@
         "Languages"
     ],
     "activationEvents": [
-        "onLanguage:mydsl"
+        "onLanguage:dls"
     ],
     "main": "out/extension",
     "contributes": {
         "languages": [
             {
-                "id": "mydsl",
+                "id": "dls",
                 "aliases": [
                     "Deep Learning Script"
                 ],
@@ -38,8 +38,8 @@
         ],
         "grammars": [
             {
-                "language": "mydsl",
-                "scopeName": "text.mydsl",
+                "language": "dls",
+                "scopeName": "source.dls",
                 "path": "./syntaxes/mydsl.tmLanguage"
             }
         ]
