@@ -19,6 +19,8 @@ network "DemoNet" {
 		branch (name:"subbranch1" in:"branch_conv1" out:128)  {
 			eltwiseOperation -> PROD
 			conv (name:"subbranch_conv1" in:"branch_conv1" out:128) { kernelSize = 1 }
+			norm (name:"norm1") { useGlobalStats = true }
+			scale (name:"scale1") { useBiasTerm = true }
 		}
 	}
 	pool   (name:"pool1"              out:2)  { type -> MAX, stride = 1 }

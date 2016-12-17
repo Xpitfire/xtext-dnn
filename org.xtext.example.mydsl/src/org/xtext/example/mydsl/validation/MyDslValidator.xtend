@@ -28,6 +28,7 @@ class MyDslValidator extends AbstractMyDslValidator {
     public static val INVALID_LAST_LAYER_OUT = "invalidLastLayerOut"
     public static val INVALID_MULTIPLE_IN_REF = "invalidMultipleInputValue"
     public static val INVALID_MULTIPLE_OUT_REF = "invalidMultipleInputValue"
+    public static val INVALID_LAYER_DECLARATION = "invalidLayerDeclaration"
 
     @Check
 	def checkNetworkStartsWithCapital(Network network) {
@@ -97,6 +98,36 @@ class MyDslValidator extends AbstractMyDslValidator {
     @Check
     def checkNonKeywordNames(Network network) {
         checkLayerNonKeywordNames(network.layers)
+    }
+
+    private def checkDeclaration(Layer layer, LayerTuple lt) {
+        if ((layer.type == 'scale' || layer.type == 'norm')
+                && (lt.in != null || lt.out != null)) {
+            error("Layer does not require input or ouput declaration (" + lt.eClass.name + ")!", lt, null, INVALID_LAYER_DECLARATION);
+        }
+    }
+
+    private def invalidLayerDeclaration(EList<Layer> layers) {
+        for (l : layers) {
+            if (l.type == 'branch') {
+                invalidLayerDeclaration(l.branchLayers)
+            } else {
+                if (l.layerDecl instanceof LayerTuple) {
+                    val lt = l.layerDecl as LayerTuple
+                    checkDeclaration(l, lt)
+                } else {
+                    val ld = (l.layerDecl as LayerDeclaration)
+                    for (lt : ld.layerTuple) {
+                        checkDeclaration(l, lt)
+                    }
+                }
+            }
+        }
+    }
+
+    @Check
+    def checkInvalidLayerDeclaration(Network network) {
+        invalidLayerDeclaration(network.layers)
     }
 
     private def checkInValue(LayerTuple lt) {
