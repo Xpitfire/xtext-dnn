@@ -296,13 +296,43 @@ shown in the next chapter within the DSL Xtext definition.
 Xtext Definition
 ================
 
-The following listing shows the Xtext DSL definition for the Deep
-Learning Script (\*.dls):
+Follow this [link](https://github.com/Xpitfire/xtext-dnn/blob/master/org.xtext.example.mydsl/src/org/xtext/example/mydsl/MyDsl.xtext) to see the entire Xtext DSL definition.
 
 Example
 =======
 
 The following listing shows an exemplary network:
+
+~~~
+network "TestNet" {
+  epochs = 100
+  batchSize = 50
+  imageSize = 32
+  imageChannels = 3
+  outputLabels = 10
+
+  caffePath = "$CAFFE_HOME"           // set the default caffe home path
+  outputPath = "/media/xpitfire/data/temp"	
+
+  updater -> adam
+  learningRate = 3e-06                // equivalent to 0.000003
+
+  conv (name:"conv1" in:data out:128) { kernelSize = 5 }
+  conv (name:"conv2" out:64) { kernelSize = 3 }
+  branch (name:"branch1" in:"conv2" out:64) { // split the net into two branches
+    eltwiseOperation -> PROD                  // merge with the elementwise product operation
+    conv (name:"branch_conv1" out:64) { kernelSize = 1 }
+    branch (name:"subbranch1" in:"branch_conv1" out:64) { 
+      eltwiseOperation -> PROD
+      conv (name:"subbranch_conv1" in:"branch_conv1" out:64) { kernelSize = 1 }
+    }
+  }
+  pool (name:"pool1" out:2) { type -> MAX, stride = 1 }
+  dense [(name:"dense1" out:256), (name:"dense2" out:256)] { dropout = 0.4 }
+  dense (name:finalLayer out:labels) { activation -> TanH, biasInit -> xavier }
+}
+~~~
+
 
 Generated Output
 ================
