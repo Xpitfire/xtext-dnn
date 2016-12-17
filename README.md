@@ -4,7 +4,7 @@ This is a Deep Learning Script integration for Visual Studio Code based on Xtext
 
 [![Build Status](https://travis-ci.org/Xpitfire/xtext-dnn.svg?branch=master)](https://travis-ci.org/Xpitfire/xtext-dnn)
 
-## [Doumentation](doc/doc.md) 
+## [Doumentation](doc/README.md) 
 
 ## Quickstart
 
