@@ -22,6 +22,7 @@ import org.eclipse.emf.common.util.EList
 class MyDslValidator extends AbstractMyDslValidator {
 	
 	public static val INVALID_NAME = "invalidName"
+    public static val INVALID_KEYWORD_NAME = "invalidKeywordName"
     public static val DUPLICATE_NAME = "layerDuplicateName"
     public static val INVALID_FIRST_LAYER_IN = "invalidFistLayerIn"
     public static val INVALID_LAST_LAYER_OUT = "invalidLastLayerOut"
@@ -66,6 +67,36 @@ class MyDslValidator extends AbstractMyDslValidator {
     def checkDuplicateNames(Network network) {
         val names = Sets.newHashSet
         checkLayerDuplicateNames(names, network.layers)
+    }
+
+    private def checkNonKeywords(LayerTuple lt) {
+        val keywords = #['network', 'name', 'in', 'out', 'conv', 'dense', 'pool', 'norm', 'scale', 'branch']
+        if (keywords.contains(lt.layerName.name)) {
+            error("Invalid name '" + lt.layerName.name + "' (" + lt.eClass.name + ")! Cannot use keyword names.", lt, null, INVALID_KEYWORD_NAME);
+        }
+    }
+
+    private def checkLayerNonKeywordNames(EList<Layer> layers) {
+        for (l : layers) {
+            if (l.type == 'branch') {
+                checkLayerNonKeywordNames(l.branchLayers)
+            } else {
+                if (l.layerDecl instanceof LayerTuple) {
+                    val lt = l.layerDecl as LayerTuple
+                    checkNonKeywords(lt)
+                } else {
+                    val ld = (l.layerDecl as LayerDeclaration)
+                    for (lt : ld.layerTuple) {
+                        checkNonKeywords(lt)
+                    }
+                }
+            }
+        }
+    }
+
+    @Check
+    def checkNonKeywordNames(Network network) {
+        checkLayerNonKeywordNames(network.layers)
     }
 
     private def checkInValue(LayerTuple lt) {
