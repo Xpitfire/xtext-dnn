@@ -4,37 +4,35 @@ network "DemoNet" {
 	image-size = 32
     image-channels = 3
     output-labels = 10
-	
+
 	caffe-path = "$CAFFE_HOME"
-    output-path = "/media/xpitfire/data/temp"
-	
+    output-path = "/media/xpitfire/data/temp"	
+
 	updater -> sgd
 	learningRate = 0.003
 
-
-	conv   (name: "conv1"   in:data    out:128) { kernel-size = 5 }
-	conv   (name: "conv2"              out:128) { kernel-size = 5 }
-	branch (name: "branch1" in:"conv2" out:128) {
+	conv   (name:"conv1"   in:data    out:128) { kernel-size = 5 }
+	conv   (name:"conv2"              out:128) { kernel-size = 5 }
+	branch (name:"branch1" in:"conv2" out:128) {
 		operation -> PROD
-		type -> residual
-		conv   (name: "branch_conv1"                 out:128)  { kernel-size = 1 }
-		branch (name: "subbranch1" in:"branch_conv1" out:128)  {
+		conv   (name:"branch_conv1"                 out:128)  { kernel-size = 1 }
+		branch (name:"subbranch1" in:"branch_conv1" out:128)  {
 			operation -> PROD
-			type -> residual
-			conv (name: "subbranch_conv1" in:"branch_conv1" out:128) { kernel-size = 1 }
+			conv (name:"subbranch_conv1" in:"branch_conv1" out:128) { kernel-size = 1 }
 		}
 	}
-	pool   (name: "pool1"              out:2)  { type -> MAX, stride = 1 }
-	conv   (name: "conv3"              out:64) { kernel-size = 3 }
-	branch (name: "branch2" in:"conv3" out:64) {
+	pool   (name:"pool1"              out:2)  { type -> MAX, stride = 1 }
+	conv   (name:"conv3"              out:64) { kernel-size = 3 }
+	branch (name:"branch2" in:"conv3" out:64) {
 		operation -> SUM
-		type -> residual
-		conv (name: "branch_conv2" in:"conv3" out:64) { kernel-size = 1 }
+		conv (name:"branch_conv2" in:"conv3" out:64) { kernel-size = 1 }
 	}
-	pool   (name: "pool2"  out:2)     { type -> MAX, stride = 1 }
-	conv   (name: "conv4"  out:32)    { kernel-size = 3 }
-	conv   (name: "cconv5" out:16)    { kernel-size = 3 }
-	dense  (name: "dense1" out:64)
-	dense  (name: final-layer out:labels) { biasInit -> xavier }
+	pool   (name:"pool2"  out:2)     { type -> MAX, stride = 1 }
+	conv   (name:"conv4"  out:32)    { kernel-size = 3 }
+	conv   (name:"cconv5" out:16)    { kernel-size = 3 }
+	dense  (name:"dense1" out:64)
+
+	dense [(name:"test" out:256), (name:"test2" out:256)]
+	dense  (name:final-layer out:labels) { biasInit -> xavier }
 
 }

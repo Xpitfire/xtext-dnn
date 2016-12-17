@@ -44,7 +44,6 @@ BachNormBody:
 ;
 
 BranchBody:
-    'type' REFERENCE type=BranchType &
     'operation' REFERENCE operation=OperationType
 ;
 
@@ -91,10 +90,6 @@ OutParam:
 
 enum Decission:
     TRUE='true' | FALSE='false'
-;
-
-enum BranchType:
-    RESIDUAL='residual'
 ;
 
 enum OperationType:

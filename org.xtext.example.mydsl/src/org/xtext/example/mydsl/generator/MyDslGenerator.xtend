@@ -390,11 +390,10 @@ class MyDslGenerator extends AbstractGenerator {
 			bottom: "data"
 			«ELSEIF curLayer.in == null»
 
-        bottom: "«prevLayer.layerName.name»"
-
+			bottom: "«prevLayer.layerName.name»"
             «ELSE»
 
-        bottom: "«curLayer.in.name»"
+		    bottom: "«curLayer.in.name»"
 		    «ENDIF»
 		    top: "«curLayer.layerName.name»"
 		    name: "«curLayer.layerName.name»"
@@ -425,11 +424,13 @@ class MyDslGenerator extends AbstractGenerator {
         layer {
             «IF prevLayer == null»
 
-			bottom: "data"
+		    bottom: "data"
 			«ELSEIF curLayer.in == null»
-            bottom: "«prevLayer.layerName.name»"
+
+		    bottom: "«prevLayer.layerName.name»"
             «ELSE»
-            bottom: "«curLayer.in.name»"
+
+		    bottom: "«curLayer.in.name»"
             «ENDIF»
             top: "«curLayer.layerName.name»"
             name: "«curLayer.layerName.name»"

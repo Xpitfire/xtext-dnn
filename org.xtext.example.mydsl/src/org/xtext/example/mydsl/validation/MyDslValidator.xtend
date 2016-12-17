@@ -6,6 +6,13 @@ package org.xtext.example.mydsl.validation
 import org.eclipse.xtext.validation.Check
 import org.xtext.example.mydsl.myDsl.MyDslPackage
 import org.xtext.example.mydsl.myDsl.Network
+import org.xtext.example.mydsl.myDsl.LayerTuple
+import org.xtext.example.mydsl.myDsl.LayerName
+import org.xtext.example.mydsl.myDsl.LayerDeclaration
+import java.util.Set
+import com.google.common.collect.Sets
+import org.xtext.example.mydsl.myDsl.Layer
+import org.eclipse.emf.common.util.EList
 
 /**
  * This class contains custom validation rules. 
@@ -14,42 +21,159 @@ import org.xtext.example.mydsl.myDsl.Network
  */
 class MyDslValidator extends AbstractMyDslValidator {
 	
-	public static val INVALID_NAME = 'invalidName'
+	public static val INVALID_NAME = "invalidName"
+    public static val DUPLICATE_NAME = "layerDuplicateName"
+    public static val INVALID_FIRST_LAYER_IN = "invalidFistLayerIn"
+    public static val INVALID_LAST_LAYER_OUT = "invalidLastLayerOut"
+    public static val INVALID_MULTIPLE_IN_REF = "invalidMultipleInputValue"
+    public static val INVALID_MULTIPLE_OUT_REF = "invalidMultipleInputValue"
 
-	@Check
+    @Check
 	def checkNetworkStartsWithCapital(Network network) {
 		if (!Character.isUpperCase(network.name.charAt(0))) {
-			error('Name should start with a capital', 
+			warning("Name should start with a capital",
 					MyDslPackage.Literals.NETWORK__NAME,
 					INVALID_NAME)
 		}
 	}
 
-    @Check
-    def checkLearningRate(Network network) {
-
+    private def checkAndInsertName(Set<String> names, LayerTuple lt) {
+        if (names.contains(lt.layerName.name)) {
+            error("Duplicate name '" + lt.layerName.name + "' (" + lt.eClass.name + ")", lt, null, DUPLICATE_NAME);
+        }
+        names.add(lt.layerName.name)
     }
-/*
-    public static val DUPLICATE_NAME = 'HelloCustomEcoreDuplicateName'
 
-    @Check
-    def checkDuplicateElements(Model model) {
-        val nameMap = <String,Element>Multimaps2.newLinkedHashListMultimap
-
-        for (e : model.elements)
-            nameMap.put(e.name, e)
-
-        for (entry : nameMap.asMap.entrySet) {
-            val duplicates = entry.value
-            if (duplicates.size > 1) {
-                for (d : duplicates)
-                    error(
-                            "Duplicate name '" + entry.key + "' (" + d.eClass.name + ")",
-                            d,
-                            null,
-                            DUPLICATE_NAME);
+    private def checkLayerDuplicateNames(Set<String> names, EList<Layer> layers) {
+        for (l : layers) {
+            if (l.type == 'branch') {
+                checkLayerDuplicateNames(names, l.branchLayers)
+            } else {
+                if (l.layerDecl instanceof LayerTuple) {
+                    val lt = l.layerDecl as LayerTuple
+                    checkAndInsertName(names, lt)
+                } else {
+                    val ld = (l.layerDecl as LayerDeclaration)
+                    for (lt : ld.layerTuple) {
+                        checkAndInsertName(names, lt)
+                    }
+                }
             }
         }
     }
-*/
+
+    @Check
+    def checkDuplicateNames(Network network) {
+        val names = Sets.newHashSet
+        checkLayerDuplicateNames(names, network.layers)
+    }
+
+    private def checkInValue(LayerTuple lt) {
+        if (lt.in == null || lt.in.name != "data") {
+            warning("It is recommended to set the first layer input reference to 'data'!", lt, null, INVALID_FIRST_LAYER_IN)
+        }
+    }
+
+    @Check
+    def checkFirstLayerInValue(Network network) {
+        val layer = network.layers.get(0)
+        if (layer.layerDecl instanceof LayerTuple) {
+            val lt = layer.layerDecl as LayerTuple
+            checkInValue(lt)
+        } else {
+            val ld = (layer.layerDecl as LayerDeclaration)
+            checkInValue(ld.layerTuple.get(0))
+        }
+    }
+
+    private def checkLastNameValue(LayerTuple lt) {
+        if (lt.layerName == null || lt.layerName.name != "final-layer") {
+            error("Final layer requires 'final-layer' name tag!", lt, null, INVALID_FIRST_LAYER_IN)
+        }
+    }
+
+    @Check
+    def checkLastLayerOutValue(Network network) {
+        val layer = network.layers.last
+        if (layer.layerDecl instanceof LayerTuple) {
+            val lt = layer.layerDecl as LayerTuple
+            checkLastNameValue(lt)
+        } else {
+            val ld = (layer.layerDecl as LayerDeclaration)
+            checkLastNameValue(ld.layerTuple.last)
+        }
+    }
+
+    private def checkMultipleInputRef(LayerTuple lt) {
+        if (lt.in != null && lt.in.name == "data") {
+            error("Invalid multiple 'data' input reference!", lt, null, INVALID_MULTIPLE_IN_REF)
+        }
+    }
+
+    private def checkLayersMultipleInputRef(Layer layer, int i) {
+        if (layer.layerDecl instanceof LayerTuple) {
+            if (i != 0) {
+                val lt = layer.layerDecl as LayerTuple
+                checkMultipleInputRef(lt)
+            }
+        } else {
+            val ld = (layer.layerDecl as LayerDeclaration)
+            for (var j = 0; j < ld.layerTuple.length; j++) {
+                val lt = ld.layerTuple.get(j)
+                if (!(i == 0 && j == 0)) {
+                    checkMultipleInputRef(lt)
+                }
+            }
+        }
+    }
+
+    @Check
+    def checkInvalidMultipleInputRef(Network network) {
+        for (var i = 0; i < network.layers.length; i++) {
+            if (network.layers.get(i).type == 'branch') {
+                for (var j = 0; j < network.layers.get(i).branchLayers.length; j++) {
+                    checkLayersMultipleInputRef(network.layers.get(i).branchLayers.get(j), i)
+                }
+            } else {
+                checkLayersMultipleInputRef(network.layers.get(i), i)
+            }
+        }
+    }
+
+    private def checkMultipleOutputRef(LayerTuple lt) {
+        if (lt.layerName != null && lt.layerName.name == "final-layer") {
+            error("Invalid multiple 'final-layer' output reference!", lt, null, INVALID_MULTIPLE_OUT_REF)
+        }
+    }
+
+    private def checkLayersMultipleOutputRef(Layer layer, int i, int last) {
+        if (layer.layerDecl instanceof LayerTuple) {
+            if (i != last) {
+                val lt = layer.layerDecl as LayerTuple
+                checkMultipleOutputRef(lt)
+            }
+        } else {
+            val ld = (layer.layerDecl as LayerDeclaration)
+            for (var j = ld.layerTuple.length - 1; j >= 0; j--) {
+                val lt = ld.layerTuple.get(j)
+                if (!(i == last && j == ld.layerTuple.length - 1)) {
+                    checkMultipleOutputRef(lt)
+                }
+            }
+        }
+    }
+
+    @Check
+    def checkInvalidMultipleOutputRef(Network network) {
+        for (var i = network.layers.length - 1; i >= 0; i--) {
+            if (network.layers.get(i).type == 'branch') {
+                for (var j = network.layers.get(i).branchLayers.length - 1; j >= 0; j--) {
+                    checkLayersMultipleOutputRef(network.layers.get(i).branchLayers.get(j), i, network.layers.length - 1)
+                }
+            } else {
+                checkLayersMultipleOutputRef(network.layers.get(i), i, network.layers.length - 1)
+            }
+        }
+    }
+
 }
