@@ -77,15 +77,15 @@ LayerTuple:
 ;
 
 LayerName:
-	'name' ':' name=(STRING | 'finalLayer')
+	'name' DEFINE name=(STRING | 'finalLayer')
 ;
 
 InParam:
-	'in' ':' name=(STRING | 'data')
+	'in' DEFINE name=(STRING | 'data')
 ;
 
 OutParam:
-	'out' ':' (value=INTEGER | strValue='labels' | strValue='pass')
+	'out' DEFINE (value=INTEGER | strValue='labels' | strValue='pass')
 ;
 
 enum Decission:
@@ -135,6 +135,11 @@ terminal SEPARATOR:
 terminal REFERENCE:
 	'->'
 ;
+
+terminal DEFINE:
+    ':'
+;
+
 
 terminal WS:
     (' '|'\t'|'\r'|'\n')+
