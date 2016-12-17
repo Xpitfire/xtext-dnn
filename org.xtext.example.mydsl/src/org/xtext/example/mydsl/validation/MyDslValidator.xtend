@@ -87,8 +87,8 @@ class MyDslValidator extends AbstractMyDslValidator {
     }
 
     private def checkLastNameValue(LayerTuple lt) {
-        if (lt.layerName == null || lt.layerName.name != "final-layer") {
-            error("Final layer requires 'final-layer' name tag!", lt, null, INVALID_FIRST_LAYER_IN)
+        if (lt.layerName == null || lt.layerName.name != "finalLayer") {
+            error("Final layer requires 'finalLayer' name tag!", lt, null, INVALID_FIRST_LAYER_IN)
         }
     }
 
@@ -141,8 +141,8 @@ class MyDslValidator extends AbstractMyDslValidator {
     }
 
     private def checkMultipleOutputRef(LayerTuple lt) {
-        if (lt.layerName != null && lt.layerName.name == "final-layer") {
-            error("Invalid multiple 'final-layer' output reference!", lt, null, INVALID_MULTIPLE_OUT_REF)
+        if (lt.layerName != null && lt.layerName.name == "finalLayer") {
+            error("Invalid multiple 'finalLayer' output reference!", lt, null, INVALID_MULTIPLE_OUT_REF)
         }
     }
 

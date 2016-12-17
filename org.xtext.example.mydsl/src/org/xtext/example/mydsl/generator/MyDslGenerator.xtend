@@ -306,7 +306,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "accuracy"
 			type: "Accuracy"
-			bottom: "final-layer"
+			bottom: "finalLayer"
 			bottom: "label"
 			top: "accuracy"
 			include { stage: "val" }
@@ -314,7 +314,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "loss"
 			type: "SoftmaxWithLoss"
-			bottom: "final-layer"
+			bottom: "finalLayer"
 			bottom: "label"
 			top: "loss"
 			exclude { stage: "deploy" }
@@ -322,7 +322,7 @@ class MyDslGenerator extends AbstractGenerator {
 		layer {
 			name: "softmax"
 			type: "Softmax"
-			bottom: "final-layer"
+			bottom: "finalLayer"
 			top: "softmax"
 			include { stage: "deploy" }
 		}
