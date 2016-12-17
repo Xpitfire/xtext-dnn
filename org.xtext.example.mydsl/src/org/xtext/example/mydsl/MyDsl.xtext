@@ -112,10 +112,6 @@ enum WeightInitType:
 	XAVIER='xavier' | CONSTANT='constant' | GAUSSIAN='gaussian'
 ;
 
-terminal EXT_INT returns EInt:
-    INTEGER ('e' | 'E')('-' | '+') INTEGER
-;
-
 terminal INTEGER returns EInt:
     ('1'..'9')(INT)*
 ;
@@ -125,7 +121,7 @@ terminal ZINTEGER returns EInt:
 ;
 
 terminal REAL returns EFloat:
-	INTEGER | INT '.' (EXT_INT | INT) (INT)*
+	INT ('.' (INT)*)? (('e' | 'E')('-' | '+') INT)? (INT)*
 ;
 
 terminal ASSIGN:
