@@ -2,8 +2,7 @@
 
 This is a Deep Learning Script integration for Visual Studio Code of Xtext using the Microsoft Language Server Protocol.
 
-
-[![Build Status](https://travis-ci.org/itemis/xtext-languageserver-example.svg?branch=master)](https://travis-ci.org/itemis/xtext-languageserver-example)
+## [Doumentation](doc/doc.md) 
 
 ## Quickstart
 
