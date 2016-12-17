@@ -1,6 +1,8 @@
-# Xtext Visual Studio Code for Deep Learning Script
+# Visual Studio Code Extension based on Xtext for Deep Learning DSL
 
-This is a Deep Learning Script integration for Visual Studio Code of Xtext using the Microsoft Language Server Protocol.
+This is a Deep Learning Script integration for Visual Studio Code based on Xtext grammar using the Language Server Protocol for communication.
+
+[![Build Status](https://travis-ci.org/Xpitfire/xtext-dnn.svg?branch=master)](https://travis-ci.org/Xpitfire/xtext-dnn)
 
 ## [Doumentation](doc/doc.md) 
 
