@@ -49,9 +49,13 @@ class MyDslGenerator extends AbstractGenerator {
     }
 
     def generatePostImageScript(Resource resource, IFileSystemAccess2 fsa) {
-        fsa.generateFile(fileName + "-post-db-image.sh", '''
+        fsa.generateFile(fileName + "-create-db-image-mean.sh", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
+		«IF net.caffePath == null»
+		~/caffe/build/tools/compute_image_mean -backend=lmdb «net.outputPath»/train_db «net.outputPath»/«fileName»-mean.binaryproto
+		«ELSE»
 		«net.caffePath»/build/tools/compute_image_mean -backend=lmdb «net.outputPath»/train_db «net.outputPath»/«fileName»-mean.binaryproto
+		«ENDIF»
 		«ENDFOR»
 		''')
     }
@@ -59,7 +63,11 @@ class MyDslGenerator extends AbstractGenerator {
     def generatePrintGraphScript(Resource resource, IFileSystemAccess2 fsa) {
         fsa.generateFile(fileName + "-print-graph.sh", '''
 		«FOR net : resource.allContents.filter(Network).toIterable»
+		«IF net.caffePath == null»
+		python ~/caffe/python/«fileName»-draw_net.py «net.outputPath»/«fileName»-network.prototxt «net.outputPath»/«fileName»-caffe_model.png
+		«ELSE»
 		python «net.caffePath»/python/«fileName»-draw_net.py «net.outputPath»/«fileName»-network.prototxt «net.outputPath»/«fileName»-caffe_model.png
+		«ENDIF»
 		«ENDFOR»
 		''')
     }
@@ -94,8 +102,16 @@ class MyDslGenerator extends AbstractGenerator {
 		CHANNELS = «net.imgChannels»
 
 		ROOT_PATH = '«net.outputPath»/'
+		«IF net.trainPath == null»
+		TRAIN_PATH = «net.outputPath»/train
+		«ELSE»
 		TRAIN_PATH = '«net.trainPath»/'
+		«ENDIF»
+		«IF net.valPath == null»
+		VALIDATION_PATH = «net.outputPath»/val
+		«ELSE»
 		VALIDATION_PATH = '«net.valPath»/'
+        «ENDIF»
 
 		#Create index map for labels
 		labels_index = -1
@@ -274,10 +290,10 @@ class MyDslGenerator extends AbstractGenerator {
 			}
 			data_param {
 				«IF net.trainPath != null»
-				#source: "«net.outputPath»/train_db"
+				source: "«net.outputPath»/train_db"
+				backend: LMDB
 			    «ENDIF»
 			    batch_size: «net.batchSize»
-			    #backend: LMDB
 			}
 			include { stage: "train" }
 		}
@@ -293,10 +309,10 @@ class MyDslGenerator extends AbstractGenerator {
 			}
 			data_param {
 				«IF net.valPath != null»
-				#source: "«net.outputPath»/val_db"
+				source: "«net.outputPath»/val_db"
+				backend: LMDB
 			    «ENDIF»
 			    batch_size: «net.batchSize»
-			    #backend: LMDB
 			}
 			include { stage: "val" }
 		}

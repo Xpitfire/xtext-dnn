@@ -17,7 +17,7 @@ Network:
 	'outputLabels' ASSIGN outputLabels=INTEGER &
 	('trainDataPath' ASSIGN trainPath=STRING)? &
 	('valDataPath' ASSIGN valPath=STRING)? &
-	'caffePath' ASSIGN caffePath=STRING &
+	('caffePath' ASSIGN caffePath=STRING)? &
 	'outputPath' ASSIGN outputPath=STRING &
 	('seed' ASSIGN seed=ZINTEGER)? &
 	'updater' REFERENCE updaterType=UpdaterType &

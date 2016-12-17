@@ -28,6 +28,8 @@ network "DemoNet" {
 	branch (name:"branch2" in:"conv3" out:64) {
 		eltwiseOperation -> SUM
 		conv (name:"branch_conv2" in:"conv3" out:64) { kernelSize = 1 }
+		norm (name:"norm2") { useGlobalStats = true }
+		scale (name:"scale2") { useBiasTerm = true }
 	}
 	pool   (name:"pool2"  out:2)  { type -> MAX, stride = 1 }
 	conv   (name:"conv4"  out:32) { kernelSize = 3 }
