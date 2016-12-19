@@ -2,7 +2,7 @@
     "name": "xtext-dnn",
     "displayName": "Xtext VS Code DNN",
     "description": "A DSL for Deep Neural Networks based on Caffe Script",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "VeApps",
     "icon": "images/VeApps.png",
     "license": "EPL-1.0",

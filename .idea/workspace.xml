@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9a5cde90-1fee-48b4-9b5a-24aef527e944" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/org.xtext.example.mydsl/src/org/xtext/example/mydsl/MyDsl.xtext" afterPath="$PROJECT_DIR$/org.xtext.example.mydsl/src/org/xtext/example/mydsl/MyDsl.xtext" />
-    </list>
+    <list default="true" id="9a5cde90-1fee-48b4-9b5a-24aef527e944" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/org.xtext.example.mydsl.tests/.gradle/" />
     <ignored path="$PROJECT_DIR$/org.xtext.example.mydsl.tests/build/" />
     <ignored path="$PROJECT_DIR$/vscode-extension-self-contained/.gradle/" />
@@ -120,7 +118,7 @@
       <file leaf-file-name="MyDsl.xtext" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/org.xtext.example.mydsl/src/org/xtext/example/mydsl/MyDsl.xtext">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="93">
+            <state relative-caret-position="357">
               <caret line="130" column="19" lean-forward="true" selection-start-line="130" selection-start-column="19" selection-end-line="130" selection-end-column="19" />
               <folding />
             </state>
@@ -2388,12 +2386,12 @@
       <workItem from="1481915673080" duration="19116000" />
       <workItem from="1481993283279" duration="4350000" />
       <workItem from="1482001519424" duration="2710000" />
-      <workItem from="1482009590284" duration="2199000" />
+      <workItem from="1482009590284" duration="2229000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="58969000" />
+    <option name="totallyTimeSpent" value="58999000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -2417,7 +2415,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985386" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27557412" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.27557412" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Properties" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985386" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -2795,7 +2793,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/org.xtext.example.mydsl/src/org/xtext/example/mydsl/MyDsl.xtext">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="93">
+        <state relative-caret-position="357">
           <caret line="130" column="19" lean-forward="true" selection-start-line="130" selection-start-column="19" selection-end-line="130" selection-end-column="19" />
           <folding />
         </state>
