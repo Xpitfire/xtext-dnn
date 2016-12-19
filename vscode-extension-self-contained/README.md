@@ -1,7 +1,8 @@
-# Xtext VS Code example
+# VS Code for Deep Learning
 
-This is a simple example showing the [Xtext](https://www.eclipse.org/Xtext/) integration for VS Code based on the Microsoft [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
+## [Documentation](https://github.com/Xpitfire/xtext-dnn/tree/master/doc)
 
+This extension uses the VS Code [Xtext](https://www.eclipse.org/Xtext/) integration based on the Microsoft [Language Server Protocol](https://github.com/Microsoft/language-server-protocol).
 
 A typical example model would look like (Open a new folder in VSCode and create the files)
 
