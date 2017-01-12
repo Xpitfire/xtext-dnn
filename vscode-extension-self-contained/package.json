@@ -2,7 +2,7 @@
     "name": "xtext-dnn",
     "displayName": "Deep Learning Script",
     "description": "A DSL for Deep Neural Networks",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "xpitfire",
     "icon": "images/VeApps.png",
     "license": "EPL-1.0",
