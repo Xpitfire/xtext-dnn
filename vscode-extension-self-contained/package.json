@@ -42,7 +42,13 @@
                 "scopeName": "source.dls",
                 "path": "./syntaxes/dls.tmLanguage"
             }
-        ]
+        ],
+		"snippets": [
+			{
+				"language": "dls",
+				"path": "./snippets/snippets.json"
+			}
+		]
     },
     "devDependencies": {
         "typescript": "^2.0.3",

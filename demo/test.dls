@@ -10,7 +10,7 @@ network "TestNet" {
 
   updater -> adam
   learningRate = 3e-06                // equivalent to 0.000003
-
+  
   conv (name:"conv1" in:data out:128) { kernelSize = 5 }
   conv (name:"conv2" out:64) { kernelSize = 3 }
   branch (name:"branch1" in:"conv2" out:64) { // split the net into two branches
@@ -21,7 +21,9 @@ network "TestNet" {
       conv (name:"subbranch_conv1" in:"branch_conv1" out:64) { kernelSize = 1 }
     }
   }
+  
   pool (name:"pool1" out:2) { type -> MAX, stride = 1 }
   dense [(name:"dense1" out:256), (name:"dense2" out:256)] { dropout = 0.4 }
   dense (name:finalLayer out:labels) { activation -> TanH, biasInit -> xavier }
+  
 }

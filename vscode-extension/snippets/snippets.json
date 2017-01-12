@@ -1,0 +1,20 @@
+{
+    "conv": {
+        "prefix": "conv",
+        "body": "\nconv (name:\"${1:name}\" in:\"${2:data}\" out:${3:64}) { kernelSize = ${4:3} }\n",
+        "description": "conv ...",
+        "scope": "source.dls"
+    },
+    "dense": {
+        "prefix": "dense",
+        "body": "\ndense (name:\"${1:name}\" in:\"${2:data}\" out:${3:64})",
+        "description": "dense ...",
+        "scope": "source.dls"
+    },
+    "pool": {
+        "prefix": "pool",
+        "body": "\npool (name:\"${1:name}\" in:\"${2:data}\" out:${3:64}) { type -> ${4:MAX}, stride = ${5:1} }\n",
+        "description": "pool ...",
+        "scope": "source.dls"
+    }
+}

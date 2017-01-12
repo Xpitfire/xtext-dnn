@@ -5,9 +5,13 @@
         "moduleResolution": "node",
         "sourceMap": false,
         "inlineSources": false,
-        "declaration": true,
         "stripInternal": true,
+        "allowJs": true,
         "lib": [ "es6" ],
         "outDir": "../out"
+    },
+    "compileOnSave": true,
+    "typingOptions": {
+        "enableAutoDiscovery": true
     }
 }

@@ -31,6 +31,7 @@ network "DemoNet" {
 		norm (name:"norm2") { useGlobalStats = true }
 		scale (name:"scale2") { useBiasTerm = true }
 	}
+		
 	pool   (name:"pool2"  out:2)  { type -> MAX, stride = 1 }
 	conv   (name:"conv4"  out:32) { kernelSize = 3 }
 	conv   (name:"cconv5" out:16) { kernelSize = 3 }

@@ -8,7 +8,6 @@
     "no-duplicate-key": true,
     "no-unused-variable": true,
     "curly": true,
-    "semicolon": false,
     "triple-equals": false
   }
 }

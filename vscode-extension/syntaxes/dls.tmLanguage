@@ -4,7 +4,7 @@
 <dict>
 	<key>fileTypes</key>
 	<array>
-		<string>*.dls</string>
+		<string>dls</string>
 	</array>
 	<key>name</key>
 	<string>dls</string>
