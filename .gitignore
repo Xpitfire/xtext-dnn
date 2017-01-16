@@ -13,6 +13,7 @@ xtend-gen
 bin/
 
 # IntelliJ
+.idea/
 out/
 
 # Gradle
