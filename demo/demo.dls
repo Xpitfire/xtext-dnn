@@ -1,4 +1,4 @@
-network "DemoNet" {
+network "DemoNet2" {
 	epochs = 10
 	batchSize = 50
 	imageSize = 32
