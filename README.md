@@ -1,3 +1,5 @@
+
+
 # Visual Studio Code Extension based on Xtext for Deep Learning DSL
 
 This is a Deep Learning Script integration for Visual Studio Code based on Xtext grammar using the Language Server Protocol for communication.
@@ -10,7 +12,7 @@ This is a Deep Learning Script integration for Visual Studio Code based on Xtext
 
 ## Quickstart
 
-Requires Visual Studio Code (VS Code) with version 1.4.0 or greater to be on the path as `code` and Java 8+ available as `java`.
+Requires Visual Studio Code (VS Code) with version 1.6.0 or greater to be on the path as `code` and Java 8+ available as `java`.
 
 - Run `./gradlew startCode`
 
